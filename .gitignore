@@ -1,0 +1,10 @@
+blib
+pm_to_blib
+_build
+Build
+lib/Starlink/AST.c
+*.o
+MYMETA.yml
+META.yml
+Starlink-AST-*
+*.tar.gz

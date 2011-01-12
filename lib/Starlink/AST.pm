@@ -10,7 +10,7 @@ require DynaLoader;
 use base qw| DynaLoader |;
 
 
-$VERSION = '0.99';
+$VERSION = '1.00';
 
 bootstrap Starlink::AST $VERSION;
 
@@ -170,7 +170,7 @@ The AST library can be downloaded from http://www.starlink.ac.uk/ast
 
 Tim Jenness E<lt>tjenness@cpan.orgE<gt>
 
-Copyright (C) 2004-2005 Tim Jenness. All Rights Reserved.
+Copyright (C) 2004-2011 Tim Jenness. All Rights Reserved.
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

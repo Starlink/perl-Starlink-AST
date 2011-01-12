@@ -1,3 +1,12 @@
+2011-01-12  Tim Jenness  <tjenness@cpan.org>
+
+	* Build.PL: Use Module::Build
+
+2009-02-09 Tim Jenness <tjenness@cpan.org>
+
+	---- Release V0.99 CPAN ----
+
+	Lots and lots of fixes.
 
 2007-07-24 Tim Jenness <tjenness@cpan.org>
 

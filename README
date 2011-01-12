@@ -44,10 +44,10 @@ Assuming the ast_link command is in your path, and the AST libraries
 either in a Starlink installation location or in a standard library
 location:
 
-  % perl Makefile.PL
-  % make
-  % make test
-  % make install
+  % perl Build.PL
+  % ./Build
+  % ./Build test
+  % ./Build install
 
 NOTES
 -----
@@ -62,7 +62,7 @@ AUTHOR
 Tim Jenness <tjenness@cpan.org> with some help from Alasdair Allan
 (especially the PGPLOT and Tk plotting backends) and Brad Cavanagh.
 
-Copyright (C) 2004-2010 Tim Jenness. All Rights Reserved.
+Copyright (C) 2004-2011 Tim Jenness. All Rights Reserved.
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -80,6 +80,11 @@ Place,Suite 330, Boston, MA  02111-1307, USA
 
 HISTORY
 -------
+
+v1.00   + Use Module::Build
+        + Add support for short ints in AST Keymaps
+        + Add perl tie interface to keymaps
+        + Ass astMapPutU
 
 v0.99 - + Many improvements and bug fixes. Almost complete API support.
         + Add support for Tk::Zinc
