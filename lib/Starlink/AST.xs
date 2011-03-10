@@ -145,6 +145,11 @@ typedef void AstTimeMap;
 #else
 #endif
 
+#if ( (AST_MAJOR_VERS == 5 && AST_MINOR_VERS >= 3) || AST_MAJOR_VERS >= 6 )
+#define HASMAPPUTU
+#else
+#endif
+
 #if ( (AST_MAJOR_VERS == 5 && AST_MINOR_VERS >= 4) || AST_MAJOR_VERS >= 6 )
 #define HASKEYMAPSHORT
 #else
@@ -1652,8 +1657,8 @@ astMapPutU( this, key, comment )
   char * key
   char * comment
  CODE:
-#ifndef HASKEYMAP
-  Perl_croak(aTHX_ "astMapPutU: Please upgrade to AST V3.5 or newer");
+#ifndef HASMAPPUTU
+  Perl_croak(aTHX_ "astMapPutU: Please upgrade to AST V5.3 or newer");
 #else
   ASTCALL(
    astMapPutU( this, key, comment);
