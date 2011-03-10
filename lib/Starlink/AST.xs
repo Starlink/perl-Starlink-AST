@@ -147,6 +147,7 @@ typedef void AstTimeMap;
 
 #if ( (AST_MAJOR_VERS == 5 && AST_MINOR_VERS >= 3) || AST_MAJOR_VERS >= 6 )
 #define HASMAPPUTU
+#define HASHASATTRIBUTE
 #else
 #endif
 
@@ -1374,6 +1375,17 @@ astExport( this )
   ASTCALL(
    astExport( this );
   )
+
+int
+astHasAttribute( this, attrib )
+  AstObject * this
+  char * attrib
+ CODE:
+  ASTCALL(
+   RETVAL = astHasAttribute( this, attrib );
+  )
+ OUTPUT:
+  RETVAL
 
 const char *
 astGetC( this, attrib )
