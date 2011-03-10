@@ -1381,9 +1381,13 @@ astHasAttribute( this, attrib )
   AstObject * this
   char * attrib
  CODE:
+#ifndef HASHASATTRIBUTE
+   Perl_croak(aTHX_ "astHasAttribute: Please upgrade to AST V5.3 or newer");
+#else
   ASTCALL(
    RETVAL = astHasAttribute( this, attrib );
   )
+#endif
  OUTPUT:
   RETVAL
 
