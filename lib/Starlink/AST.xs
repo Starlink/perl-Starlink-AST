@@ -2789,8 +2789,100 @@ astLinearApprox( this, lbnd, ubnd, tol )
   }
 #endif
 
-# astMapBox  XXXX
+# astMapBox
+# ($lbnd_out, $ubnd_out, \@xl, \@xu) = $mapping->MapBox(\@lbnd_in, \@ubnd_in, $forward, $coord_out);
 
+void
+astMapBox( this, lbnd_in, ubnd_in, forward, coord_out )
+  AstMapping * this
+  AV * lbnd_in
+  AV * ubnd_in
+  int forward
+  int coord_out
+ PREINIT:
+  int nin;
+  int len;
+  double * clbnd = NULL;
+  double * cubnd = NULL;
+  double * cxl = NULL;
+  double * cxu = NULL;
+  double lbnd_out;
+  double ubnd_out;
+  AV * xl = NULL;
+  AV * xu = NULL;
+ PPCODE:
+  nin = astGetI( this, "Nin" );
+  len = av_len( lbnd_in ) + 1;
+  if ( len != nin ) Perl_croak( aTHX_ "lbnd must contain %d elements", nin );
+  len = av_len( ubnd_in ) + 1;
+  if ( len != nin ) Perl_croak( aTHX_ "ubnd must contain %d elements", nin );
+  clbnd = pack1D(newRV_noinc((SV*)lbnd_in), 'd' );
+  cubnd = pack1D(newRV_noinc((SV*)ubnd_in), 'd' );
+
+  /* Return arrays */
+  cxl = get_mortalspace( nin, 'd' );
+  cxu = get_mortalspace( nin, 'd' );
+
+  ASTCALL(
+    astMapBox( this, clbnd, cubnd, forward, coord_out,
+               &lbnd_out, &ubnd_out, cxl, cxu );
+  )
+
+  /* Push results */
+  XPUSHs(sv_2mortal(newSVnv(lbnd_out)));
+  XPUSHs(sv_2mortal(newSVnv(ubnd_out)));
+
+  xl = newAV();
+  unpack1D( newRV_noinc((SV*) xl), cxl, 'd', nin );
+  XPUSHs( newRV_noinc( (SV*)xl ));
+  xu = newAV();
+  unpack1D( newRV_noinc((SV*) xu), cxu, 'd', nin );
+  XPUSHs( newRV_noinc( (SV*)xu ));
+
+
+# astMapSplit
+# One argument: The indices of the mapping to extract
+# Two return arguments: A mapping and a list of indices
+#  ($map, @indices) = $map->MapSplit( \@indices );
+void
+astMapSplit( this, in )
+  AstMapping * this
+  AV * in
+ PREINIT:
+  int i;
+  int nin;
+  int nout;
+  int * cin;
+  int * cout;
+  AstMapping * outmap = NULL;
+ PPCODE:
+#ifndef HASMAPSPLIT
+  Perl_croak(aTHX_ "astMapSplit: Please upgrade to AST V5.3 or greater");
+#else
+  nin = av_len( in ) + 1;
+  cin = pack1D(newRV_noinc((SV*)in), 'i');
+
+  /* output array */
+  nout = astGetI( this, "Nout" );
+  cout = get_mortalspace( nout, 'i' );
+
+  ASTCALL(
+    astMapSplit( this, nin, cin, cout, &outmap );
+  )
+
+  /* Push the results onto the stack */
+  if (outmap) {
+    SV * sv = createPerlObject( "AstMappingPtr", (AstObject*)outmap );
+    XPUSHs(sv_2mortal( sv ));
+    /* recalculate nout */
+    nout = astGetI( outmap, "Nout" );
+    for (i = 0; i < nout; i++) {
+      XPUSHs( sv_2mortal( newSViv( cout[i] ) ) );
+    }
+  } else {
+    XSRETURN_EMPTY;
+  }
+#endif
 
 # astRate
 #  Returns the rate and (sometimes) the second derivatives
