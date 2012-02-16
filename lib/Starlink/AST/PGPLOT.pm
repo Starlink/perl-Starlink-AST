@@ -50,6 +50,32 @@ of the packages public interface.
 
 =over 4
 
+=item B<_GBBuf>
+
+Start a new graphics buffering context.
+
+  my $status = _GBBuf();
+
+=cut
+
+sub _GBBuf {
+  pgbbuf();
+  return 1;
+}
+
+=item B<_GEBuf>
+
+End a graphics buffering context.
+
+  my $status = _GEBuf();
+
+=cut
+
+sub _GEBuf {
+  pgebuf();
+  return 1;
+}
+
 =item B<_GFlush>
 
 This function ensures that the display device is up-to-date, by flushing
@@ -794,6 +820,8 @@ use Starlink::AST::PGPLOT;
 sub pgplot {
   my $self = shift;
 
+  $self->GBBuf(\&Starlink::AST::PGPLOT::_GBBuf);
+  $self->GEBuf(\&Starlink::AST::PGPLOT::_GEBuf);
   $self->GFlush(\&Starlink::AST::PGPLOT::_GFlush);
   $self->GLine(\&Starlink::AST::PGPLOT::_GLine);
   $self->GMark(\&Starlink::AST::PGPLOT::_GMark);

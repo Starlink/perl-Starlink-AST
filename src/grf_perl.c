@@ -87,6 +87,144 @@ static SV * Perl_getPlotAttr ( const char * attr ) {
   return getPerlObjectAttr( CurrentPlot, attr );
 }
 
+int astGBBuf( void ){
+  dSP;
+  SV * cb;
+  SV * external;
+  int retval;
+
+  if (!astOK) return 0;
+  if (CurrentPlot == NULL ) {
+    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    return 0;
+  }
+
+  cb = Perl_getPlotAttr( "_gbbuf" );
+
+  if (astOK) {
+    if ( cb != NULL ) {
+      int count;
+      int flags = G_SCALAR | G_EVAL;
+      ENTER;
+      SAVETMPS;
+
+      /* Always need PUSHMARK/PUTBACK even if no args */
+      PUSHMARK(sp);
+
+      /* If we have a registered external object, push that on as
+	 a first argument. */
+      external = Perl_getPlotAttr( "_gexternal" );
+
+      if ( external != NULL ) {
+	XPUSHs( external );
+      } else {
+	/* No arguments */
+	flags |= G_NOARGS;
+      }
+
+      PUTBACK;
+
+      count = perl_call_sv( SvRV(cb), flags);
+
+      retval = ReportPerlError( AST__GRFER );
+
+      SPAGAIN;
+
+      if (astOK) {
+	if (count != 1) {
+	  astError( AST__GRFER,
+		    "Returned more than 1 arg from GBBuf callback");
+	  retval = 0;
+	} else {
+	  retval = POPi;
+	}
+      } else {
+	retval = 0;
+      }
+
+      PUTBACK;
+
+      FREETMPS;
+      LEAVE;
+    } else {
+      retval = 0;
+      Report("astGBBuf");
+    }
+  } else {
+    retval = 0;
+  }
+  return retval;
+}
+
+int astGEBuf( void ){
+  dSP;
+  SV * cb;
+  SV * external;
+  int retval;
+
+  if (!astOK) return 0;
+  if (CurrentPlot == NULL ) {
+    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    return 0;
+  }
+
+  cb = Perl_getPlotAttr( "_gebuf" );
+
+  if (astOK) {
+    if ( cb != NULL ) {
+      int count;
+      int flags = G_SCALAR | G_EVAL;
+      ENTER;
+      SAVETMPS;
+
+      /* Always need PUSHMARK/PUTBACK even if no args */
+      PUSHMARK(sp);
+
+      /* If we have a registered external object, push that on as
+	 a first argument. */
+      external = Perl_getPlotAttr( "_gexternal" );
+
+      if ( external != NULL ) {
+	XPUSHs( external );
+      } else {
+	/* No arguments */
+	flags |= G_NOARGS;
+      }
+
+      PUTBACK;
+
+      count = perl_call_sv( SvRV(cb), flags);
+
+      retval = ReportPerlError( AST__GRFER );
+
+      SPAGAIN;
+
+      if (astOK) {
+	if (count != 1) {
+	  astError( AST__GRFER,
+		    "Returned more than 1 arg from GEBuf callback");
+	  retval = 0;
+	} else {
+	  retval = POPi;
+	}
+      } else {
+	retval = 0;
+      }
+
+      PUTBACK;
+
+      FREETMPS;
+      LEAVE;
+    } else {
+      retval = 0;
+      Report("astGEBuf");
+    }
+  } else {
+    retval = 0;
+  }
+  return retval;
+}
+
 int astGFlush( void ){
   dSP;
   SV * cb;

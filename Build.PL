@@ -15,7 +15,7 @@ if ($@) {
 }
 
 # This is the list of libraries required to use ems
-my $astlibs = qx/ast_link -myerr -mygrf /;
+my $astlibs = qx/ast_link -myerr -grf_v5.6/;
 
 die "No AST libraries were found.\n This may imply that the ast_link command is not in your path."
   if $astlibs !~ /./;

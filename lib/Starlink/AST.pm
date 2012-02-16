@@ -872,6 +872,18 @@ sub PBox {
   return ($self->{_xplo}, $self->{_xphi}, $self->{_yplo}, $self->{_yphi} );
 }
 
+sub GBBuf {
+  my $self = shift;
+  if (@_) { $self->{_gbbuf} = shift; }
+  return $self->{_gbbuf};
+}
+
+sub GEBuf {
+  my $self = shift;
+  if (@_) { $self->{_gebuf} = shift; }
+  return $self->{_gebuf};
+}
+
 sub GFlush {
   my $self = shift;
   if (@_) { $self->{_gflush} = shift; }
@@ -938,6 +950,8 @@ sub GExternal {
 
 sub null {
   my $self = shift;
+  $self->GBBuf( undef );
+  $self->GEBuf( undef );
   $self->GFlush( undef );
   $self->GLine( undef );
   $self->GQch( undef );
@@ -959,6 +973,8 @@ sub __dumpargs {
 
 sub debug {
   my $self = shift;
+  $self->GBBuf( sub {&__dumpargs("GBBuf",@_); return 1; });
+  $self->GEBuf( sub {&__dumpargs("GEBuf",@_); return 1; });
   $self->GFlush( sub {&__dumpargs("GFlush",@_); return 1; });
   $self->GLine( sub {&__dumpargs("GLine",@_);   return 1; });
   $self->GQch( sub {&__dumpargs("GQch",@_ );    return (1,1,1); });
