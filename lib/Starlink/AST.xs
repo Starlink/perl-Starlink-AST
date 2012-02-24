@@ -1395,10 +1395,18 @@ const char *
 astGetC( this, attrib )
   AstObject * this
   char * attrib
+ PREINIT:
+  SV * arg = ST(0);
  CODE:
-  ASTCALL(
-   RETVAL = astGetC( this, attrib );
-  )
+  if (astIsAPlot(this)) {
+     PLOTCALL( arg,
+        RETVAL = astGetC( this, attrib );
+     )
+  } else {
+    ASTCALL(
+     RETVAL = astGetC( this, attrib );
+    )
+  }
  OUTPUT:
   RETVAL
 
@@ -1410,10 +1418,18 @@ astGetD( this, attrib )
   char * attrib
  ALIAS:
   astGetF = 1
+ PREINIT:
+  SV * arg = ST(0);
  CODE:
-  ASTCALL(
-   RETVAL = astGetD( this, attrib );
-  )
+  if (astIsAPlot(this)) {
+     PLOTCALL( arg,
+        RETVAL = astGetD( this, attrib );
+     )
+  } else {
+    ASTCALL(
+     RETVAL = astGetD( this, attrib );
+    )
+  }
  OUTPUT:
   RETVAL
 
@@ -1423,10 +1439,18 @@ astGetI( this, attrib )
   char * attrib
  ALIAS:
   astGetL = 1
+ PREINIT:
+  SV * arg = ST(0);
  CODE:
-  ASTCALL(
-   RETVAL = astGetI( this, attrib );
-  )
+  if (astIsAPlot(this)) {
+     PLOTCALL( arg,
+        RETVAL = astGetI( this, attrib );
+     )
+  } else {
+    ASTCALL(
+     RETVAL = astGetI( this, attrib );
+    )
+  }
  OUTPUT:
   RETVAL
 
