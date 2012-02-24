@@ -96,6 +96,8 @@ for my $i ( 0 .. $#headers ) {
   # Register internal plot functions
   $plot->GAttr( \&reg_attr );
   $plot->GFlush( \&reg_flush );
+  $plot->GBBuf( \&reg_bbuf );
+  $plot->GEBuf( \&reg_ebuf );
   $plot->GLine( \&reg_line );
   $plot->GMark( \&reg_mark );
   $plot->GText( \&reg_text );
@@ -112,7 +114,8 @@ for my $i ( 0 .. $#headers ) {
     print "$attr: ". $plot->Get( $attr ) . "\n";
   }
   for my $attr ( @rat ) {
-    print "$attr: ". $plot->Get( $attr ) . "\n";
+    # Test GetD with this one
+    print "$attr: ". $plot->GetD( $attr ) . "\n";
   }
   for my $attr ( @lat ) {
     print "$attr: ". $plot->Get( $attr ) . "\n";
@@ -146,6 +149,16 @@ sub reg_sink {
 # Graphics callbacks
 sub reg_flush {
   print "# REG_FLUSH\n";
+  return 1;
+}
+
+sub reg_bbuf {
+  print "# REG_BBUF\n";
+  return 1;
+}
+
+sub reg_ebuf {
+  print "# REG_EBUF\n";
   return 1;
 }
 
