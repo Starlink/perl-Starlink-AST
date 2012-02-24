@@ -23,7 +23,24 @@
 *     The grf module is not a class and does not inherit.
 
 *  Copyright:
-*     Copyright (C) 2004 Central Laboratory of the Research Councils
+*     Copyright (C) 1997-2006 Council for the Central Laboratory of the
+*     Research Councils
+
+*  Licence:
+*     This program is free software; you can redistribute it and/or
+*     modify it under the terms of the GNU General Public Licence as
+*     published by the Free Software Foundation; either version 2 of
+*     the Licence, or (at your option) any later version.
+*
+*     This program is distributed in the hope that it will be
+*     useful,but WITHOUT ANY WARRANTY; without even the implied
+*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+*     PURPOSE. See the GNU General Public Licence for more details.
+*
+*     You should have received a copy of the GNU General Public Licence
+*     along with this program; if not, write to the Free Software
+*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
+*     02110-1301, USA
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -33,6 +50,8 @@
 *        Original version.
 *     25-OCT-1996 (DSB):
 *        Primatives macros defined, extra parameter added to astGAttr.
+*     17-FEB-2006 (DSB):
+*        Added GRF__ESH and GRF__ESG.
 *-
 */
 
@@ -71,11 +90,15 @@
 #define GRF__ESSTY 10
 #define GRF__ESPOP 11
 #define GRF__ESPSH 12
+#define GRF__ESH   13
+#define GRF__ESG   14
 
 /* Function prototypes. */
 /* ==================== */
 int astGAttr( int, double, double *, int );
 int astGScales( float *, float * );
+int astGBBuf( void );
+int astGEBuf( void );
 int astGFlush( void );
 int astGLine( int, const float *, const float * );
 int astGMark( int, const float *, const float *, int );
