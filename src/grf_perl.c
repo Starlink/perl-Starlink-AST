@@ -95,7 +95,7 @@ int astGBBuf( void ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGBBuf: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -164,7 +164,7 @@ int astGEBuf( void ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGEBuf: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -233,7 +233,7 @@ int astGFlush( void ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGFlush: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -306,7 +306,7 @@ int astGLine( int n, const float *x, const float *y ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGLine: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -377,7 +377,7 @@ int astGQch( float *chv, float *chh ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGQch: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -451,7 +451,7 @@ int astGMark( int n, const float *x, const float *y, int type ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGMark: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -524,7 +524,7 @@ int astGText( const char *text, float x, float y, const char *just,
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGText: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -599,7 +599,7 @@ int astGTxExt( const char *text, float x, float y, const char *just,
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGTxExt: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -733,7 +733,7 @@ int astGAttr( int attr, double value, double *old_value, int prim ){
 
   /* Make sure we have a plot */
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGAttr: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -803,7 +803,7 @@ int astGScales( float *chv, float *chh ){
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGScales: No Plot object stored. Should not happen." );
     return 0;
   }
 
@@ -874,7 +874,7 @@ int astGCap( int cap, int value ) {
 
   if (!astOK) return 0;
   if (CurrentPlot == NULL ) {
-    astError( AST__GRFER, "No Plot object stored. Should not happen." );
+    astError( AST__GRFER, "astGCap: No Plot object stored. Should not happen." );
     return 0;
   }
 
