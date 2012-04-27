@@ -90,6 +90,12 @@ typedef void AstShiftMap;
 typedef void AstXmlChan;
 #endif
 
+#if ( (AST_MAJOR_VERS == 5 && AST_MINOR_VERS >= 2) || AST_MAJOR_VERS >= 6 )
+#define HASSTCSCHAN
+#else
+typedef void AstStcsChan;
+#endif
+
 #if ( (AST_MAJOR_VERS == 3 && AST_MINOR_VERS >= 2) || AST_MAJOR_VERS >= 4 )
 #define HASTRANMAP
 #define HASPUTCARDS
@@ -750,6 +756,7 @@ _new( class, sourcefunc, sinkfunc, options )
   AstChannel * channel;
   AstFitsChan * fitschan;
   AstXmlChan * xmlchan;
+  AstStcsChan * stcschan;
   bool has_source = 0;
   bool has_sink = 0;
  CODE:
@@ -817,6 +824,16 @@ _new( class, sourcefunc, sinkfunc, options )
                              (void (*)( const char * )) sink, sinkWrap, options );
    )
    if (astOK) setPerlAstObject( RETVAL, (AstObject*)xmlchan );
+#endif
+  } else if (strstr( class, "StcsChan") != NULL ) {
+#ifndef HASSTCSCHAN
+   Perl_croak(aTHX_ "StcsChan: Please upgrade to AST V5.2 or greater");
+#else
+   ASTCALL(
+    stcschan = astStcsChanFor( (const char *(*)()) source, sourceWrap,
+                               (void (*)( const char * )) sink, sinkWrap, options );
+   )
+   if (astOK) setPerlAstObject( RETVAL, (AstObject*)stcschan );
 #endif
   } else {
      Perl_croak(aTHX_ "Channel of class %s not recognized.", class );

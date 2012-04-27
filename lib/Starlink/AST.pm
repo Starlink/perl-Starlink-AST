@@ -120,6 +120,10 @@ Same calling signature as C<Starlink::AST::Channel>.
 Same calling signature as C<Starlink::AST::Channel>. Note that xmlChan
 is only available for AST v3.1 and newer.
 
+=item B<Starlink::AST::StcsChan>
+
+A C<Starlink::AST::Channel> using IVOA STC-S descriptions.
+
 =item B<Starlink::AST::GrisMap>
 
 Only available in AST v3.0 and newer.
@@ -229,6 +233,9 @@ package Starlink::AST::FitsChan;
 use base qw/ Starlink::AST::Channel /;
 
 package Starlink::AST::XmlChan;
+use base qw/ Starlink::AST::Channel /;
+
+package Starlink::AST::StcsChan;
 use base qw/ Starlink::AST::Channel /;
 
 # Exception handling
@@ -379,6 +386,9 @@ use base qw/ Starlink::AST::Channel /;
 
 package Starlink::AST::XmlChan;
 use base qw/ Starlink::AST::Channel /;
+
+package Starlink::AST::StcsChan;
+use base  qw/ Starlink::AST::Channel /;
 
 # Make this available for completeness and provide
 # a tie interface. Useful when transferring content via
@@ -785,6 +795,9 @@ package Starlink::AST::CmpRegion;
 use base qw/ Starlink::AST::Region /;
 
 package Starlink::AST::NullRegion;
+use base qw/ Starlink::AST::Region /;
+
+package Starlink::AST::Prism;
 use base qw/ Starlink::AST::Region /;
 
 package Starlink::AST::FluxFrame;
