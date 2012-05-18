@@ -3310,41 +3310,42 @@ astSetUnc( this, unc )
   )
 #endif
 
+# astGetRegionBounds
+# (\@lbnd, \@ubnd) = $region->GetRegionBounds();
+
 void
-astGetRegionBounds( this, lbnd, ubnd )
+astGetRegionBounds( this )
   AstRegion * this
-  AV * lbnd
-  AV * ubnd
  PREINIT:
   int naxes;
   int i;
   double * clbnd;
   double * cubnd;
- CODE:
+  AV * lbnd;
+  AV * ubnd;
+ PPCODE:
 #ifndef HASREGION
   Perl_croak(aTHX_ "astGetRegionBounds: Please upgrade to AST V3.5 or greater");
 #else
-  //if ((!SvROK(lbnd)) || (SvTYPE(SvRV(lbnd)) != SVt_PVAV)) {
-  //  Perl_croak(aTHX_ "astGetRegionBounds: lbnd must be an array reference");
-  //}
-  //else if ((!SvROK(ubnd)) || (SvTYPE(SvRV(ubnd)) != SVt_PVAV)) {
-  //  Perl_croak(aTHX_ "astGetRegionBounds: ubnd must be an array reference");
-  //}
-  //else {
-    naxes = astGetI( this, "Naxes" );
-    clbnd = malloc( naxes * sizeof(double));
-    cubnd = malloc( naxes * sizeof(double));
-    ASTCALL(
-      astGetRegionBounds( this, clbnd, cubnd );
-    )
-  // TODO: this just pushes into the arrays - it should clear them first!
-    for (i = 0; i < naxes; i ++) {
-      av_push(lbnd, newSVnv(clbnd[i]));
-      av_push(ubnd, newSVnv(cubnd[i]));
-    }
-    free(clbnd);
-    free(cubnd);
-  //}
+  naxes = astGetI( this, "Naxes" );
+  clbnd = malloc(naxes * sizeof(double));
+  cubnd = malloc(naxes * sizeof(double));
+
+  ASTCALL(
+    astGetRegionBounds( this, clbnd, cubnd );
+  )
+
+  lbnd = newAV();
+  ubnd = newAV();
+  for (i = 0; i < naxes; i ++) {
+    av_push(lbnd, newSVnv(clbnd[i]));
+    av_push(ubnd, newSVnv(cubnd[i]));
+  }
+  free(clbnd);
+  free(cubnd);
+
+  XPUSHs(newRV_noinc((SV*) lbnd));
+  XPUSHs(newRV_noinc((SV*) ubnd));
 #endif
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Ellipse

@@ -56,15 +56,14 @@ my $readobj = $buffch->Read();
 isa_ok($readobj, 'Starlink::AST::Prism');
 cmp_ok($readobj->Get('Naxes'), '==', 4);
 
-my (@lbnd, @ubnd);
-$readobj->GetRegionBounds(\@lbnd, \@ubnd);
-cmp_ok($ubnd[0], '>',  1000000000 ); # shoudl be == max float
-ok(nearly_equal($lbnd[1], 2.50080939227851), 'lbnd[1]');
-ok(nearly_equal($ubnd[1], 2.6967811201606), 'ubnd[1]');
-ok(nearly_equal($lbnd[2], 1.171115928088195), 'lbnd[2]');
-ok(nearly_equal($ubnd[2], 1.24091013301998), 'ubnd[2]');
-is($lbnd[3], 4000.0);
-is($ubnd[3], 7000.0);
+my ($lbnd, $ubnd) = $readobj->GetRegionBounds();
+cmp_ok($ubnd->[0], '>',  1000000000 ); # shoudl be == max float
+ok(nearly_equal($lbnd->[1], 2.50080939227851), 'lbnd[1]');
+ok(nearly_equal($ubnd->[1], 2.6967811201606), 'ubnd[1]');
+ok(nearly_equal($lbnd->[2], 1.171115928088195), 'lbnd[2]');
+ok(nearly_equal($ubnd->[2], 1.24091013301998), 'ubnd[2]');
+is($lbnd->[3], 4000.0);
+is($ubnd->[3], 7000.0);
 
 sub nearly_equal {
   my ($a, $b) = @_;
