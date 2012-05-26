@@ -3328,8 +3328,8 @@ astGetRegionBounds( this )
   Perl_croak(aTHX_ "astGetRegionBounds: Please upgrade to AST V3.5 or greater");
 #else
   naxes = astGetI( this, "Naxes" );
-  clbnd = malloc(naxes * sizeof(double));
-  cubnd = malloc(naxes * sizeof(double));
+  clbnd = get_mortalspace( naxes, 'd' );
+  cubnd = get_mortalspace( naxes, 'd' );
 
   ASTCALL(
     astGetRegionBounds( this, clbnd, cubnd );
@@ -3337,12 +3337,8 @@ astGetRegionBounds( this )
 
   lbnd = newAV();
   ubnd = newAV();
-  for (i = 0; i < naxes; i ++) {
-    av_push(lbnd, newSVnv(clbnd[i]));
-    av_push(ubnd, newSVnv(cubnd[i]));
-  }
-  free(clbnd);
-  free(cubnd);
+  unpack1D( newRV_noinc((SV*) lbnd), clbnd, 'd', naxes );
+  unpack1D( newRV_noinc((SV*) ubnd), cubnd, 'd', naxes );
 
   XPUSHs(newRV_noinc((SV*) lbnd));
   XPUSHs(newRV_noinc((SV*) ubnd));
