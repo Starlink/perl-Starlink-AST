@@ -41,10 +41,11 @@ extern "C" {
 /* typedef some common types so that the typemap can bless constants
    into correct namespaces */
 
+#include <limits.h>
+
 typedef int StatusType;
 typedef int WcsMapType;
 
-#include "prm_par.h"
 #include "ast.h"
 #include "grf.h"
 
@@ -1762,7 +1763,7 @@ astMapPut0S( this, key, value, comment)
 #ifndef HASKEYMAPSHORT
   Perl_croak(aTHX_ "astMapPut0S: Please upgrade to AST V5.4 or newer");
 #else
-  if ( value < NUM__MINW || value > NUM__MAXW ) {
+  if ( value < SHRT_MIN || value > SHRT_MAX ) {
     Perl_croak( aTHX_ "astMapPut0S: Supplied short value (%d) is out of range",
                 value );
   }
@@ -1864,7 +1865,7 @@ astMapPut1S( this, key, values, comment)
           Perl_croak( aTHX_ "Can not store reference in short keymap" );
         }
         ival = SvIV(*element);
-        if (ival < NUM__MINW || ival > NUM__MAXW) {
+        if (ival < SHRT_MIN || ival > SHRT_MAX) {
           Perl_croak( aTHX_ "MapPut1S: Value of element %d (%d) is out of range for a short",
                       i, ival );
         }
