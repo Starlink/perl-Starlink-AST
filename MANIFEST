@@ -26,6 +26,7 @@ t/dsb_reg.t
 t/fitschan.t
 t/fitschn0.t
 t/formats.t
+t/keymap-tie.t
 t/keymap.t
 t/offset.t
 t/plot00_pgplot.t
@@ -38,6 +39,7 @@ t/plot_tk.t
 t/plot_tk_zinc.t
 t/region.t
 t/specframe.t
+t/stcschan.t
 t/unitmap.t
 t/xmlchan.t
 t/zoommap.t
