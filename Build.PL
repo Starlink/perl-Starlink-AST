@@ -2,23 +2,15 @@ use strict;
 use warnings;
 use File::Spec;
 use Module::Build;
-use vars qw/ %StarConfig /;
+use Config;
 
-# Try looking up the config system
-eval "use Starlink::Config qw/ :override :verbose/;";
-if ($@) {
-  print "Could not find Starlink::Config - using /star\n";
-  %StarConfig = (
-                 Star_Inc => '/star/include',
-                 Star_Lib => '/star/lib',
-                );
+# On OSX we need to restrict the exported symbols in the bundle
+# to prevent NDF linking against libast clashing with NDF loading
+# Starlink::AST
+my $linkflags = "";
+if ($^O eq 'darwin') {
+  $linkflags = "-exported_symbols_list exported_symbols.lis";
 }
-
-# This is the list of libraries required to use ems
-my $astlibs = qx/ast_link -myerr -grf_v5.6/;
-
-die "No AST libraries were found.\n This may imply that the ast_link command is not in your path."
-  if $astlibs !~ /./;
 
 my $file = File::Spec->catfile( "lib", "Starlink", "AST.pm" );
 
@@ -45,9 +37,16 @@ my $build = Module::Build->new
    build_requires => {
                       "Test::More" => 0,
                      },
-   c_source => [ "src" ],
-   extra_compiler_flags => [ "-I$StarConfig{Star_Inc}" ],
-   extra_linker_flags =>  "-L$StarConfig{Star_Lib} $astlibs",
+   configure_requires => {
+                          "Module::Build" => 0.3604,
+                         },
+   c_source => [ "src", "ast" ],
+   extra_compiler_flags => [ "-Iextsrc", # we do not build these directly
+                             "-DHAVE_DECL_ISNAN=1", # Assume we have NaN
+                             "-DSIZEOF_LONG=". $Config{longsize},
+                             "-DSIZEOF_LONG_LONG=". $Config{longlongsize},
+                           ],
+   extra_linker_flags => $linkflags,
   );
 
 $build->create_build_script;

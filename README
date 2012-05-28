@@ -29,20 +29,13 @@ The AST library provides:
 REQUIREMENTS
 ------------
 
-Has been tested with AST v1.8 onwards (AST is currently at v4.1)
-and with perl 5.005 through perl 5.10.1. Also known to work on Linux,
-Mac OS X, Solaris and Digital Unix.
-
-You will need to install the AST library. See
+The module comes with the source code so no external libraries are
+required. For more information on AST see:
 
   http://www.starlink.ac.uk/ast
 
 INSTALLATION
 ------------
-
-Assuming the ast_link command is in your path, and the AST libraries
-either in a Starlink installation location or in a standard library
-location:
 
   % perl Build.PL
   % ./Build
@@ -62,7 +55,7 @@ AUTHOR
 Tim Jenness <tjenness@cpan.org> with some help from Alasdair Allan
 (especially the PGPLOT and Tk plotting backends) and Brad Cavanagh.
 
-Copyright (C) 2004-2011 Tim Jenness. All Rights Reserved.
+Copyright (C) 2004-2012 Tim Jenness. All Rights Reserved.
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -80,6 +73,15 @@ Place,Suite 330, Boston, MA  02111-1307, USA
 
 HISTORY
 -------
+
+v1.01   + Now comes with the AST source code to remove an external dependency
+          on the Starlink software.
+        + Add StcsChan support.
+        + Add astGetRegionBounds
+        + Add GEBuf and GBBuf to GRF interface.
+        + Add astMapBox and astMapSplit
+        + Add astHasAttribute
+        - Fix attribute retrieval when a Plot object is involved.
 
 v1.00   + Use Module::Build
         + Add support for short ints in AST Keymaps
