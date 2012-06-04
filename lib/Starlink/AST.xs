@@ -219,29 +219,30 @@ AstObject ** pack1DAstObj( AV * avref ) {
   return outarr;
 }
 
+/* This routine should throw an exception of a different
+   class depending on the value of the AST status. For
+   now we croak with the error message.
 
-/* Exception handler callback */
+   We deliberately try to stay in C here rather than
+   add to the complexity by calling out into perl.
+*/
 
 void astThrowException ( int status, AV* errorstack ) {
-  dSP;
+  size_t i;
+  size_t nelem;
 
-  ENTER;
-  SAVETMPS;
+  SV * errsv = sv_2mortal( newSVpvn("", 0) );
 
-  PUSHMARK(sp);
-
-  /* Push the status and array onto the arg stack */
-  XPUSHs(sv_2mortal(newSViv(status)));
-  XPUSHs(newRV_noinc((SV*) errorstack));
-
-  PUTBACK;
-
-  /* Now call the perl code to throw the exception */
-  call_pv("Starlink::AST::Status::ThrowError", G_DISCARD );
-
-  FREETMPS;
-  LEAVE;
-
+  nelem = av_len( errorstack );
+  for (i = 0; i <= nelem; i++ ) {
+    SV ** elem = av_fetch( errorstack, i, 0);
+    if (elem != NULL ) {
+      sv_catpv( errsv, "- ");
+      sv_catsv( errsv, (SV*)*elem);
+      if (i != nelem) sv_catpv( errsv, "\n");
+    }
+  }
+  croak( SvPV_nolen( errsv ) );
 }
 
 /* Callbacks */
@@ -425,19 +426,24 @@ void My_astClearErrMsg () {
    Does not try to do anything if status is 0
  */
 
-void My_astCopyErrMsg ( AV ** newbuff, int status ) {
-  int i;
-  SV ** elem;
+void My_astCopyErrMsg ( SV ** newbuff, int status ) {
+  size_t i;
+  size_t nelem;
   if (status == 0) return;
 
   *newbuff = newAV();
   sv_2mortal((SV*)*newbuff);
-  for (i = 0; i <= av_len( ErrBuff ) ; i++ ) {
-    elem = av_fetch( ErrBuff, i, 0);
+  nelem = av_len( ErrBuff );
+  for (i = 0; i <= nelem ; i++ ) {
+    SV ** elem = av_fetch( ErrBuff, i, 0);
     if (elem != NULL ) {
-      av_push( *newbuff, sv_mortalcopy( *elem ));
+      SvREFCNT_inc( *elem ); /* Storing it in a new place so inc reference count */
+      av_push( *newbuff, *elem);
     }
   }
+
+  /* And we no longer need the error array contents */
+  My_astClearErrMsg();
 
 }
 

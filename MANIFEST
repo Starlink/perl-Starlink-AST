@@ -23,6 +23,7 @@ t/attrib.t
 t/channel.t
 t/dclone.t
 t/dsb_reg.t
+t/error.t
 t/fitschan.t
 t/fitschn0.t
 t/formats.t
