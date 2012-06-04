@@ -426,7 +426,7 @@ void My_astClearErrMsg () {
    Does not try to do anything if status is 0
  */
 
-void My_astCopyErrMsg ( SV ** newbuff, int status ) {
+void My_astCopyErrMsg ( AV ** newbuff, int status ) {
   size_t i;
   size_t nelem;
   if (status == 0) return;
