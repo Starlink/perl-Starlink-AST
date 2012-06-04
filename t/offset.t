@@ -2,6 +2,7 @@
 
 use strict;
 use Test::More tests => 10;
+use Test::Number::Delta;
 
 require_ok("Starlink::AST");
 
@@ -29,7 +30,7 @@ $p2[1] = 128;
 # Distance
 # --------
 my $point3 = $wcsinfo->Distance( $point1, $point2 );
-is( sprintf( "%.1f", $point3), 171.4,
+delta_ok( $point3, 171.4059509,
     "Distance between points using Distance()" );
 
 $offset = 5;
@@ -41,23 +42,23 @@ $p2[1] = 6;
 # Offset
 # ------
 $point3 = $wcsinfo->Offset( $point1, $point2, $offset );
-is( $$point3[0], 4, "X distance using Offset()" );
-is( $$point3[1], 3, "Y distance using Offset()" );
+delta_ok( $$point3[0], 4, "X distance using Offset()" );
+delta_ok( $$point3[1], 3, "Y distance using Offset()" );
 
 # Offset2
 # -------
 my $angle = atan2(4, 3);
 my $actual;
 ($actual, $point3) = $wcsinfo->Offset2( $point1, $angle, $offset );
-is( $actual, $angle, "Angle using Offset2()" );
-is( $$point3[0], 4, "X distance using Offset2()" );
-is( $$point3[1], 3, "Y distance using Offset2()" );
+delta_ok( $actual, $angle, "Angle using Offset2()" );
+delta_ok( $$point3[0], 4, "X distance using Offset2()" );
+delta_ok( $$point3[1], 3, "Y distance using Offset2()" );
 
 # Resolve
 # -------
 my ($p4, $d1, $d2) = $wcsinfo->Resolve( [3,3],[6,7],[8,3] );
-is($d1, 3, "Distance from basis vector");
-is($d2, 4, "Distance from basis vector");
+delta_ok($d1, 3, "Distance from basis vector");
+delta_ok($d2, 4, "Distance from basis vector");
 
 
 __DATA__

@@ -2,6 +2,7 @@
 
 use strict;
 use Test::More tests => 22;
+use Test::Number::Delta;
 
 require_ok("Starlink::AST");
 {
@@ -25,7 +26,7 @@ is($zoommap->GetI("Zoom"), 99, "Test attribute of SetI");
 ok(! $zoommap->Test( "Report" ), "Report attrib not defined yet");
 
 $zoommap->Set("Zoom=99.6, Report=1");
-is($zoommap->GetD("Zoom"), 99.6, "Test attribute of AST-style Set");
+delta_ok($zoommap->GetD("Zoom"), 99.6, "Test attribute of AST-style Set");
 
 $zoommap->Set("Zoom" => 24,
               "Report" => 0,

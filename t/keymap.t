@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use constant NTESTS => 70;
 use Test::More tests => NTESTS;
+use Test::Number::Delta;
 
 require_ok( "Starlink::AST");
 
@@ -74,7 +75,12 @@ for my $k (keys %TESTS) {
       is( ref($results[$i]), ref($ori[$i]),
 	  "Compare object element class $i : ". ref($ori[$i]));
     } else {
-      is( $results[$i], $ori[$i], "Compare element $i: $ori[$i]");
+      # if we know this was a double we do a float test
+      if ($TESTS{$k}->[0] =~ /D/) {
+        delta_ok( $results[$i], $ori[$i], "Compare floating point element $i: $ori[$i]");
+      } else {
+        is( $results[$i], $ori[$i], "Compare element $i: $ori[$i]");
+      }
     }
   }
 
