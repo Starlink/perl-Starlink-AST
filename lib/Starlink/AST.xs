@@ -793,7 +793,7 @@ _new( class, sourcefunc, sinkfunc, options )
       /* Store reference to object */
       sink = rv;
       /* and store the actual sink callback in the object */
-      setPerlObjectAttr( RETVAL, "_sink", newRV( SvRV(sinkfunc) ));
+      setPerlObjectAttr( RETVAL, "_sink", newRV_inc( SvRV(sinkfunc) ));
     }
 
     /* In some cases the source routine is called after this constructor
@@ -803,7 +803,7 @@ _new( class, sourcefunc, sinkfunc, options )
       /* Store reference to object */
       source = rv;
       /* and store the actual sink callback in the object */
-      setPerlObjectAttr( RETVAL, "_source", newRV( SvRV(sourcefunc) ));
+      setPerlObjectAttr( RETVAL, "_source", newRV_inc( SvRV(sourcefunc) ));
     }
 
   }

@@ -628,7 +628,7 @@ AV* coerce1D ( SV* arg, int n ) {
        array = (AV *) SvRV(arg);                           /* reference */
    }else{
        array = newAV();                                    /* Create */
-       sv_setsv(arg, newRV((SV*) array));
+       sv_setsv(arg, newRV_inc((SV*) array));
    }
 
    m = av_len(array);
