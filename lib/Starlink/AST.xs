@@ -285,7 +285,7 @@ static char *sourceWrap( const char *(*source)(), int *status ) {
   PUSHMARK(sp);
   PUTBACK;
 
-  count = perl_call_sv( cb, G_NOARGS | G_SCALAR | G_EVAL );
+  count = call_sv( cb, G_NOARGS | G_SCALAR | G_EVAL );
 
   ReportPerlError( AST__INTER );
 
@@ -346,7 +346,7 @@ static void sinkWrap( void (*sink)(const char *), const char *line, int *status 
   XPUSHs( sv_2mortal( newSVpv( (char*)line, strlen(line) )));
   PUTBACK;
 
-  perl_call_sv( SvRV(cb), G_DISCARD | G_VOID | G_EVAL );
+  call_sv( SvRV(cb), G_DISCARD | G_VOID | G_EVAL );
 
   ReportPerlError( AST__INTER );
 

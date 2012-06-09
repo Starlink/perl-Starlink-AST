@@ -124,7 +124,7 @@ int astGBBuf( void ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), flags);
+      count = call_sv( SvRV(cb), flags);
 
       retval = ReportPerlError( AST__GRFER );
 
@@ -193,7 +193,7 @@ int astGEBuf( void ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), flags);
+      count = call_sv( SvRV(cb), flags);
 
       retval = ReportPerlError( AST__GRFER );
 
@@ -262,7 +262,7 @@ int astGFlush( void ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), flags);
+      count = call_sv( SvRV(cb), flags);
 
       retval = ReportPerlError( AST__GRFER );
 
@@ -338,7 +338,7 @@ int astGLine( int n, const float *x, const float *y ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_SCALAR | G_EVAL );
+      count = call_sv( SvRV(cb), G_SCALAR | G_EVAL );
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -405,7 +405,7 @@ int astGQch( float *chv, float *chh ){
       }
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), flags);
+      count = call_sv( SvRV(cb), flags);
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -484,7 +484,7 @@ int astGMark( int n, const float *x, const float *y, int type ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_SCALAR | G_EVAL );
+      count = call_sv( SvRV(cb), G_SCALAR | G_EVAL );
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -553,7 +553,7 @@ int astGText( const char *text, float x, float y, const char *just,
       XPUSHs( sv_2mortal(newSVnv(upy) ) );
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_SCALAR | G_EVAL);
+      count = call_sv( SvRV(cb), G_SCALAR | G_EVAL);
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -628,7 +628,7 @@ int astGTxExt( const char *text, float x, float y, const char *just,
       XPUSHs( sv_2mortal(newSVnv(upy) ) );
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_ARRAY | G_EVAL );
+      count = call_sv( SvRV(cb), G_ARRAY | G_EVAL );
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -760,7 +760,7 @@ int astGAttr( int attr, double value, double *old_value, int prim ){
 
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_ARRAY | G_EVAL );
+      count = call_sv( SvRV(cb), G_ARRAY | G_EVAL );
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -831,7 +831,7 @@ int astGScales( float *chv, float *chh ){
       }
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), flags);
+      count = call_sv( SvRV(cb), flags);
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
@@ -899,7 +899,7 @@ int astGCap( int cap, int value ) {
       XPUSHs( sv_2mortal(newSViv(value) ) );
       PUTBACK;
 
-      count = perl_call_sv( SvRV(cb), G_SCALAR | G_EVAL);
+      count = call_sv( SvRV(cb), G_SCALAR | G_EVAL);
       retval = ReportPerlError( AST__GRFER );
 
       SPAGAIN;
