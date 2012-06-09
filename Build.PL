@@ -35,6 +35,7 @@ my $build = Module::Build->new
                   "Astro::FITS::Header" => 0,
                  },
    build_requires => {
+                      "perl" => 5.008,
                       "Test::More" => 0,
                       "Test::Deep" => 0,
                       "Test::Number::Delta" => 0,
