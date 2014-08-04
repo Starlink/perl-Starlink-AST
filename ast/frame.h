@@ -470,20 +470,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -622,6 +622,7 @@ typedef struct AstFrame {
    AstSystemType system;         /* Code identifying coordinate system */
    AstSystemType alignsystem;    /* Code for Alignment coordinate system */
    int flags;                    /* Bit mask containing various protected flags */
+   struct AstFrameSet *variants; /* FrameSet defining alternative properties for the Frame */
 } AstFrame;
 
 /* Cached Line structure. */
@@ -759,6 +760,8 @@ typedef struct AstFrameVtab {
    void (* ValidateAxisSelection)( AstFrame *, int, const int *, const char *, int * );
    void (* LineOffset)( AstFrame *, AstLineDef *, double, double, double[2], int * );
    AstPointSet *(* FrameGrid)( AstFrame *, int, const double *, const double *, int * );
+   struct AstFrameSet *(* GetFrameVariants)( AstFrame *, int * );
+   void (* SetFrameVariants)( AstFrame *, struct AstFrameSet *, int * );
 
    double (* GetTop)( AstFrame *, int, int * );
    int (* TestTop)( AstFrame *, int, int * );
@@ -896,6 +899,8 @@ void astNorm_( AstFrame *, double[], int * );
 void astOffset_( AstFrame *, const double[], const double[], double, double[], int * );
 void astResolve_( AstFrame *, const double [], const double [], const double [], double [], double *, double *, int * );
 void astSetActiveUnit_( AstFrame *, int, int * );
+AstFrameSet *astGetFrameVariants_( AstFrame *, int * );
+void astSetFrameVariants_( AstFrame *, AstFrameSet *, int * );
 
 #if defined(astCLASS)            /* Protected */
 void astNormBox_( AstFrame *, double *, double *, AstMapping *, int * );
@@ -1122,6 +1127,10 @@ astINVOKE(V,astGetActiveUnit_(astCheckFrame(this),STATUS_PTR))
 astINVOKE(V,astSetActiveUnit_(astCheckFrame(this),value,STATUS_PTR))
 
 #if defined(astCLASS)            /* Protected */
+#define astGetFrameVariants(this) \
+astINVOKE(O,astGetFrameVariants_(astCheckFrame(this),STATUS_PTR))
+#define astSetFrameVariants(this,variants) \
+astINVOKE(V,astSetFrameVariants_(astCheckFrame(this),astCheckFrameSet(variants),STATUS_PTR))
 #define astNormBox(this,lbnd,ubnd,reg) \
 astINVOKE(V,astNormBox_(astCheckFrame(this),lbnd,ubnd,astCheckMapping(reg),STATUS_PTR))
 #define astFormat(this,axis,value) \

@@ -93,20 +93,20 @@ f     - AST_VERSION: Return the verson of the AST library being used.
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -214,7 +214,15 @@ f     - AST_VERSION: Return the verson of the AST library being used.
 *     22-JUL-2011 (DSB):
 *        Add methods astSetProxy and astGetProxy.
 *     2-SEP-2011 (DSB):
-*        Add functions astToString and astFromString
+*        Add functions astToString and astFromString.
+*     13-SEP-2013 (DSB):
+*        Report an error in astAnnul if the supplied object handle is owned by
+*        a different thread. Note, the Object itself does not need to be owned
+*        by the current thread, since it should be possible for a thread to
+*        relinquish a pointer to an object (i.e. a handle) without actually
+*        owning the object itself.
+*     6-JAN-2014 (DSB):
+*        Added method astEnvSet.
 *class--
 */
 
@@ -262,6 +270,7 @@ f     - AST_VERSION: Return the verson of the AST library being used.
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 
@@ -445,6 +454,7 @@ static void SetID( AstObject *, const char *, int * );
 static void SetIdent( AstObject *, const char *, int * );
 static void Show( AstObject *, int * );
 static void VSet( AstObject *, const char *, char **, va_list, int * );
+static void EnvSet( AstObject *, int * );
 
 static int GetUseDefs( AstObject *, int * );
 static int TestUseDefs( AstObject *, int * );
@@ -1765,6 +1775,93 @@ static void EmptyObjectCache( int *status ){
       vtab->free_list = astFree( vtab->free_list );
       vtab->nfree = 0;
    }
+}
+
+static void EnvSet( AstObject *this, int *status ) {
+/*
+*+
+*  Name:
+*     astEnvSet
+
+*  Purpose:
+*     Set default values for an Object's attributes.
+
+*  Type:
+*     Protected virtual function.
+
+*  Synopsis:
+*     #include "object.h"
+*     void astEnvSet( AstObject *this )
+
+*  Class Membership:
+*     Object method.
+
+*  Description:
+*     This function assigns a set of attribute values for an Object,
+*     the attributes and their values being specified by means of an
+*     environment variable of the form "<CLASSNAME>_OPTIONS" that has
+*     a value of the form:
+*
+*        "attribute1 = value1, attribute2 = value2, ... "
+*
+*     Here, "attribute" specifies an attribute name and the value to
+*     the right of each "=" sign should be a suitable textual
+*     representation of the value to be assigned to that
+*     attribute. This will be interpreted according to the attribute's
+*     data type.
+
+*  Parameters:
+*     this
+*        Pointer to the Object.
+
+*  Notes:
+*     - See astVSet for details of how the setting strings are
+*     interpreted.
+*-
+*/
+
+/* Local Variables: */
+   char varname[ 100 ];
+   const char *attrs = NULL;
+   const char *class = NULL;
+
+/* Check the global error status. */
+   if ( !astOK ) return;
+
+/* Get the string holding default attribute values for the class of the
+   supplied object. This string is held in the class virtual function
+   table. */
+   attrs = this->vtab->defaults;
+
+/* If this is the first time the defaults have been requested, get the
+   list of defaults from the environment variable "<CLASSNAME>_OPTIONS"
+   and store in the virtual function table. */
+   if( !attrs ) {
+
+/* Get the class name. */
+      class = astGetClass( this );
+
+/* Form the upper-case name of the environment variable. */
+      if( class ) {
+         sprintf( varname, "%s_OPTIONS", class );
+         astChrCase( NULL, varname, 1, sizeof( varname ) );
+
+/* Get the value of the environment variable. */
+         attrs = getenv( varname );
+
+/* If no defaults were specified store the string "None". */
+         if( ! attrs ) attrs = "None";
+
+/* Store a copy in the virtual function table. */
+         astBeginPM;
+         this->vtab->defaults = astStore( NULL, attrs, strlen( attrs ) + 1 );
+         astEndPM;
+      }
+   }
+
+/* If any defaults were specified, set the corresponding attributes. */
+   if( attrs && strcmp( attrs, "None" ) ) astSet( this, attrs, status );
+
 }
 
 static int Equal( AstObject *this, AstObject *that, int *status ){
@@ -5294,6 +5391,7 @@ void astInitObjectVtab_(  AstObjectVtab *vtab, const char *name, int *status ) {
    vtab->TestAttrib = TestAttrib;
    vtab->TestID = TestID;
    vtab->TestIdent = TestIdent;
+   vtab->EnvSet = EnvSet;
    vtab->VSet = VSet;
    vtab->Cast = Cast;
    vtab->GetObjSize = GetObjSize;
@@ -5325,6 +5423,9 @@ void astInitObjectVtab_(  AstObjectVtab *vtab, const char *name, int *status ) {
    vtab->dump = NULL;
    vtab->dump_class = NULL;
    vtab->dump_comment = NULL;
+
+/* Initialise the default attributes to use when creating objects. */
+   vtab->defaults = NULL;
 
 /* The virtual function table for each class contains a list of pointers
    to memory blocks which have previously been used to store an Object of
@@ -5730,6 +5831,10 @@ int astTestAttrib_( AstObject *this, const char *attrib, int *status ) {
    if ( !astOK ) return 0;
    return (**astMEMBER(this,Object,TestAttrib))( this, attrib, status );
 }
+void astEnvSet_( AstObject *this, int *status ) {
+   if ( !astOK ) return;
+   (**astMEMBER(this,Object,EnvSet))( this, status );
+}
 void astVSet_( AstObject *this, const char *settings, char **text, va_list args, int *status ) {
    if ( !astOK ) return;
    (**astMEMBER(this,Object,VSet))( this, settings, text, args, status );
@@ -6065,9 +6170,13 @@ AstObject *astAnnulId_( AstObject *this_id, int *status ) {
    if ( !astIsAObject( astMakePointer_NoLockCheck( this_id ) ) ) return NULL;
 
 /* Obtain the Handle offset for this Object and annul the Handle and
-   its associated Object pointer. */
+   its associated Object pointer. Report an error if the handle is
+   currently owned by a different thread. That is, the *Object* need
+   not be locked by the current thread (as indicated by the use of
+   astMakePointer above), but the *handle* must be owned by the current
+   thread. */
    LOCK_MUTEX2;
-   AnnulHandle( CheckId( this_id, 0, status ), status );
+   AnnulHandle( CheckId( this_id, 1, status ), status );
    UNLOCK_MUTEX2;
 
 /* Always return a NULL pointer value. */
@@ -6381,8 +6490,8 @@ MYSTATIC int CheckId( AstObject *this_id, int lock_check, int *status ) {
          if ( astOK ) {
             astError( AST__OBJIN, "Invalid Object pointer given (value is "
                       "%d).", status, id  );
-            astError( AST__OBJIN, "This pointer is currently locked by "
-                      "another thread." , status);
+            astError( AST__OBJIN, "This pointer is currently owned by "
+                      "another thread (possible programming error)." , status);
          }
 #endif
 
@@ -7199,7 +7308,7 @@ c--
    Object structure (using astManageLock) since as soon as astManageLock
    returns, another thread that is waiting for the object to be unlocked
    may start up and modify the handle properties. */
-   if( handles[ ihandle ].context >= 0 ) {
+   if( ihandle >= 0 && handles[ ihandle ].context >= 0 ) {
       RemoveHandle( ihandle, &active_handles[ handles[ ihandle ].context ],
                     status );
 #if defined(MEM_DEBUG)
@@ -7683,9 +7792,6 @@ AstObject *astMakePointer_( AstObject *this_id, int *status ) {
 
 /* Validate the identifier supplied and derive the Handle offset. */
    ihandle = CheckId( this_id, 1, status );
-
-
-   // XXX
 
 /* If the identifier was valid, extract the Object pointer from the
    Handle. */

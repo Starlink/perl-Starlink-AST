@@ -17,20 +17,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -64,6 +64,8 @@
 *        Added astBndPoints.
 *     16-JUN-2011 (DSB):
 *        Added astReplaceNan.
+*     2-OCT-2012 (DSB):
+*        Check for Infs as well as NaNs.
 */
 
 /* Module Macros. */
@@ -1872,7 +1874,7 @@ static int ReplaceNaN( AstPointSet *this, int *status ) {
             p = ptr[ ic ];
             p0 = p + np;
             for( ; p < p0; p++ ) {
-               if( astISNAN(*p) ) {
+               if( !astISFINITE(*p) ) {
                   result = 1;
                   *p = AST__BAD;
                }

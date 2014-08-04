@@ -26,20 +26,20 @@ f     only within textual output (e.g. from AST_WRITE).
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -448,7 +448,7 @@ static double AxisDistance( AstAxis *this_axis, double v1, double v2, int *statu
 
 /* Check both axis values are OK, and form the returned increment,
    normalizing it into the range +PI to -PI. */
-   if( v1 != AST__BAD && v2 != AST__BAD ) result = astDrange( v2 - v1 );
+   if( v1 != AST__BAD && v2 != AST__BAD ) result = palDrange( v2 - v1 );
 
 /* Return the result. */
    return result;
@@ -1094,7 +1094,7 @@ static void AxisNorm( AstAxis *this_axis, double *value, int *status ) {
       centrezero = astGetAxisCentreZero( this );
 
 /* Wrap the value into the appropriate range. */
-      if ( astOK ) *value = centrezero ? astDrange( *value ) :
+      if ( astOK ) *value = centrezero ? palDrange( *value ) :
                                          palDranrm( *value );
    }
 }
@@ -2252,47 +2252,6 @@ static const char *DHmsUnit( const char *fmt, int digs, int output, int *status 
 
 /* Return the result. */
    return result;
-}
-
-
-double astDrange_( double value ) {
-/*
-*+
-*  Name:
-*     astDrange
-
-*  Purpose:
-*     Normalize an angle into the range +PI to -PI.
-
-*  Type:
-*     Protected function.
-
-*  Synopsis:
-*     #include "skyaxis.h"
-*     double astDrange( value )
-
-*  Class Membership:
-*     SkyAxis function
-
-*  Description:
-*     This function returns the the supplied angle normalised into the
-*     range +PI to -PI. The algorithm used seems to be more accurate than
-*     iauAnpm for cases where the angle is extremely close to +/- PI.
-
-*  Parameters:
-*     value
-*        The angle to be normalized, in radians..
-
-*  Returned Value:
-*     The normalized angle, in radians..
-
-*  Notes:
-*     - This function has no status value.
-*-
-*/
-   while( value < -AST__DPI ) value += 2*AST__DPI;
-   while( value > AST__DPI ) value -= 2*AST__DPI;
-   return value;
 }
 
 static int GetObjSize( AstObject *this_object, int *status ) {

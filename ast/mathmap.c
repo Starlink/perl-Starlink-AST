@@ -52,20 +52,20 @@ f     The MathMap class does not define any new routines beyond those
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -83,6 +83,8 @@ f     The MathMap class does not define any new routines beyond those
 *        - Override astEqual method.
 *     20-NOV-2006 (DSB):
 *        Re-implement the Equal method to avoid use of astSimplify.
+*     30-AUG-2012 (DSB):
+*        Fix bug in undocumented Gaussian noise function.
 *class--
 */
 
@@ -4924,6 +4926,13 @@ static double Rand( Rcontext *context, int *status ) {
    shuffle table. */
       itab = (int) ( context->random_int /
                      ( 1L + ( m1 - 1L ) / (long int) ntab ) );
+
+/* The algorithm left by RFWS seems to have a bug that "itab" can
+   sometimes be outside the range of [0.,ntab-1] causing the context->table
+   array to be addressed out of bounds. To avoid this, use the
+   following sticking plaster, since I'm not sure what the correct fix is. */
+      if( itab < 0 ) itab = -itab;
+      itab = itab % ntab;
 
 /* Extract the table entry and replace it with a new random value from
    the first generator "rand1". This is the Bays-Durham shuffle. */

@@ -49,22 +49,24 @@ f     - AST_SLAADD: Add a celestial coordinate conversion to an SlaMap
 *  Copyright:
 *     Copyright (C) 1997-2006 Council for the Central Laboratory of the
 *     Research Councils
+*     Copyright (C) 2013 Science & Technology Facilities Council.
+*     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -109,6 +111,10 @@ f     - AST_SLAADD: Add a celestial coordinate conversion to an SlaMap
 *        aberration vector.
 *        - Correct bug in the simplification of adjacent AMP and MAP
 *        conversions.
+*     15-NOV-2013 (DSB):
+*        Fix bug in merging of adjacent AMP and MAP conversions (MapMerge
+*        did not take account of the fact that the arguments for these
+*        two conversions are stored in swapped order).
 
 *class--
 */
@@ -2963,9 +2969,9 @@ static int MapMerge( AstMapping *this, int where, int series, int *nmap,
                } else if ( ( PAIR_CVT( AST__SLA_AMP, AST__SLA_MAP ) ||
                              PAIR_CVT( AST__SLA_MAP, AST__SLA_AMP ) ) &&
                            EQUAL( cvtargs[ istep ][ 0 ],
-                                  cvtargs[ istep + 1 ][ 0 ] ) &&
+                                  cvtargs[ istep + 1 ][ 1 ] ) &&
                            EQUAL( cvtargs[ istep ][ 1 ],
-                                  cvtargs[ istep + 1 ][ 1 ] ) ) {
+                                  cvtargs[ istep + 1 ][ 0 ] ) ) {
                   istep++;
                   keep = 0;
 

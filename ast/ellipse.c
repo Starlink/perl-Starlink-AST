@@ -37,20 +37,20 @@ c     - AST_ELLIPSEPARS: Get the geometric parameters of the Ellipse
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -58,6 +58,13 @@ c     - AST_ELLIPSEPARS: Get the geometric parameters of the Ellipse
 *  History:
 *     7-SEP-2004 (DSB):
 *        Original version.
+*     4-NOV-2013 (DSB):
+*        Modify RegPins so that it can handle uncertainty regions that straddle
+*        a discontinuity. Previously, such uncertainty Regions could have a huge
+*        bounding box resulting in matching region being far too big.
+*     6-JAN-2014 (DSB):
+*        Ensure cached information is available in RegCentre even if no new 
+*        centre is supplied.
 *class--
 */
 
@@ -95,7 +102,6 @@ c     - AST_ELLIPSEPARS: Get the geometric parameters of the Ellipse
 #include "ellipse.h"             /* Interface definition for this class */
 #include "mapping.h"             /* Position mappings */
 #include "unitmap.h"             /* Unit Mapping */
-#include "skyaxis.h"             /* For astDrange */
 #include "pal.h"                 /* Positional astronomy library */
 
 /* Error code definitions. */
@@ -343,7 +349,7 @@ AstRegion *astBestEllipse_( AstPointSet *mesh, double *cen, AstRegion *unc, int 
       for( ip = maxat + 1; ip < np; ip++ ) {
          if( dist[ ip ] != AST__BAD ) {
             r3 = dist[ ip ];
-            t3 = astDrange( ang[ ip ] - a0 );
+            t3 = palDrange( ang[ ip ] - a0 );
             break;
          }
       }
@@ -351,7 +357,7 @@ AstRegion *astBestEllipse_( AstPointSet *mesh, double *cen, AstRegion *unc, int 
          for( ip = 0; ip < maxat; ip++ ) {
             if( dist[ ip ] != AST__BAD ) {
                r3 = dist[ ip ];
-               t3 = astDrange( ang[ ip ] - a0 );
+               t3 = palDrange( ang[ ip ] - a0 );
                break;
             }
          }
@@ -365,7 +371,7 @@ AstRegion *astBestEllipse_( AstPointSet *mesh, double *cen, AstRegion *unc, int 
       for( ip = maxat - 1; ip > -1; ip-- ) {
          if( dist[ ip ] != AST__BAD ) {
             r1 = dist[ ip ];
-            t1 = astDrange( ang[ ip ] - a0 );
+            t1 = palDrange( ang[ ip ] - a0 );
             break;
          }
       }
@@ -373,7 +379,7 @@ AstRegion *astBestEllipse_( AstPointSet *mesh, double *cen, AstRegion *unc, int 
          for( ip = np - 1; ip > maxat; ip-- ) {
             if( dist[ ip ] != AST__BAD ) {
                r1 = dist[ ip ];
-               t1 = astDrange( ang[ ip ] - a0 );
+               t1 = palDrange( ang[ ip ] - a0 );
                break;
             }
          }
@@ -1281,6 +1287,9 @@ static double *RegCentre( AstRegion *this_region, double *cen, double **ptr,
 /* Get a pointer to the Ellipse structure. */
    this = (AstEllipse *) this_region;
 
+/* Ensure cached information is available. */
+   Cache( this, status );
+
 /* Get the number of axis values per point in the current Frame. */
    ncc = astGetNout( this_region->frameset );
 
@@ -1300,9 +1309,6 @@ static double *RegCentre( AstRegion *this_region, double *cen, double **ptr,
 /* Otherwise, we store the supplied new centre coords and return a NULL
    pointer. */
    } else {
-
-/* Ensure cached information is available. */
-      Cache( this, status );
 
 /* Get a pointer to the axis values stored in the Region structure. */
       rptr = astGetPoints( this_region->points );
@@ -1437,6 +1443,7 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
    AstRegion *tunc;             /* Uncertainity Region from "this" */
    double **ptr;                /* Pointer to axis values in "ps2" */
    double *p;                   /* Pointer to next axis value */
+   double *safe;                /* An interior point in "this" */
    double drad;                 /* Radius increment corresponding to border width */
    double l1;                   /* Length of bounding box diagonal */
    double l2;                   /* Length of bounding box diagonal */
@@ -1477,11 +1484,18 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
                 astGetNaxes( unc ) );
    }
 
+/* Get the centre of the region in the base Frame. We use this as a "safe"
+   interior point within the region. */
+   safe = astRegCentre( this, NULL, NULL, 0, AST__BASE );
+
 /* We now find the maximum distance on each axis that a point can be from the
    boundary of the Ellipse for it still to be considered to be on the boundary.
    First get the Region which defines the uncertainty within the Ellipse being
-   checked (in its base Frame), and get its bounding box. */
+   checked (in its base Frame), re-centre it on the interior point found
+   above (to avoid problems if the uncertainty region straddles a
+   discontinuity), and get its bounding box. */
    tunc = astGetUncFrm( this, AST__BASE );
+   if( safe ) astRegCentre( tunc, safe, NULL, 0, AST__CURRENT );
    astGetRegionBounds( tunc, lbnd_tunc, ubnd_tunc );
 
 /* Find the geodesic length within the base Frame of "this" of the diagonal of
@@ -1489,9 +1503,12 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
    frm = astGetFrame( this_region->frameset, AST__BASE );
    l1 = astDistance( frm, lbnd_tunc, ubnd_tunc );
 
-/* Also get the Region which defines the uncertainty of the supplied points
-   and get its bounding box in the same Frame. */
+/* Also get the Region which defines the uncertainty of the supplied
+   points and get its bounding box. First re-centre the uncertainty at the
+   interior position to avoid problems from uncertainties that straddle a
+   discontinuity. */
    if( unc ) {
+      if( safe ) astRegCentre( unc, safe, NULL, 0, AST__CURRENT );
       astGetRegionBounds( unc, lbnd_unc, ubnd_unc );
 
 /* Find the geodesic length of the diagonal of this bounding box. */
@@ -1596,6 +1613,7 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
 
    tunc = astAnnul( tunc );
    frm = astAnnul( frm );
+   safe = astFree( safe );
 
 /* If an error has occurred, return zero. */
    if( !astOK ) {

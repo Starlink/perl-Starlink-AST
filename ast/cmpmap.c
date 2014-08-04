@@ -42,20 +42,20 @@ f     The CmpMap class does not define any new routines beyond those
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -143,6 +143,12 @@ f     The CmpMap class does not define any new routines beyond those
 *     24-JAN-2012 (DSB):
 *        If efficient MapSplit fails to split (e.g. due to the presence
 *        of PermMaps), then revert to the older slower method.
+*     5-FEB-2013 (DSB):
+*        Take account of Invert flags when combining parallel CmpMaps in
+*        series.
+*     29-APR-2013 (DSB):
+*        In MapList, use the astDoNotSimplify method to check that it is 
+*        OK to expand the CmpMap.
 *class--
 */
 
@@ -1124,8 +1130,9 @@ static int MapList( AstMapping *this_mapping, int series, int invert,
    this = (AstCmpMap *) this_mapping;
 
 /* Check if the CmpMap combines its component Mappings in the same way
-   (series or parallel) as the decomposition requires. */
-   if ( this->series == series ) {
+   (series or parallel) as the decomposition requires. Also, do not
+   expand CmpMaps that are not appropriate for simplification. */
+   if ( this->series == series && !astDoNotSimplify( this ) ) {
 
 /* If so, obtain the Invert attribute values to be applied to each
    component Mapping. */
@@ -1633,14 +1640,30 @@ static int MapMerge( AstMapping *this, int where, int series, int *nmap,
 /* Indicate both sublists are currently empty. */
                   subout1 = subin2 = 0;
                   new = submap1 = submap2 = NULL;
+                  subinv1 = subinv2 = 0;
 
 /* Loop round untill all Mappings have been used. */
                   while( jmap1 <= nmap1 && jmap2 <= nmap2 && astOK ) {
 
 /* Note the number of outputs from submap1 and the number of inputs to
-   submap2. */
-                     subout1 = submap1 ? astGetNout( submap1 ) : 0;
-                     subin2 = submap2 ? astGetNin( submap2 ) : 0;
+   submap2. If the Invert flag is not set to the required value for
+   either Mapping, then inputs become outputs and vice-versa, so swap Nin
+   and Nout. */
+                     if( !submap1 ) {
+                        subout1 = 0;
+                     } else if( subinv1 == astGetInvert( submap1 ) ) {
+                        subout1 = astGetNout( submap1 );
+                     } else {
+                        subout1 = astGetNin( submap1 );
+                     }
+
+                     if( !submap2 ) {
+                        subin2 = 0;
+                     } else if( subinv2 == astGetInvert( submap2 ) ) {
+                        subin2 = astGetNin( submap2 );
+                     } else {
+                        subin2 = astGetNout( submap2 );
+                     }
 
 /* If sublist for cmpmap1 has too few outputs, add the next Mapping from
    the cmpmap1 list into the submap1 sublist. */

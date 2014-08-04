@@ -113,20 +113,20 @@ f    AST_GRIDLINE, AST_POLYCURVE.
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -140,6 +140,10 @@ f    AST_GRIDLINE, AST_POLYCURVE.
 *        Clear up compiler warnings.
 *     4-MAY-2012 (DSB):
 *        Avoid segvio in Grid if no ticks are drawn.
+*     21-MAY-2012 (DSB):
+*        In astLoadPlot3D, do not call SetRootCorner as it requires an
+*        active graphics system to be present which may not yet have been
+*        established. Also establish the grf routines to be used.
 *class--
 */
 
@@ -5470,6 +5474,10 @@ static void Set3DGrf( AstPlot3D *this, AstPlot *plot, int plane, int *status ){
    astGrfSet( plot, "Text", (AstGrfFun) Plot3DText );
    astGrfSet( plot, "TxExt", (AstGrfFun) Plot3DTxExt );
 
+/* Ensure that the Plot uses the grf interface registered using
+   astGrfSet. */
+   astSetGrf( plot, 1 );
+
 /* When the above functions are called, they need to know which plane
    they are drawing on. So we put this information into the GrfContext
    KeyMap stored in the Plot. This KeyMap will be passed to the above
@@ -8036,7 +8044,6 @@ AstPlot3D *astLoadPlot3D_( void *mem, size_t size, AstPlot3DVtab *vtab,
       } else {
          new->rootcorner = -1;
       }
-      if( TestRootCorner( new, status ) ) SetRootCorner( new, new->rootcorner, status );
       text = astFree( text );
 
 /* Labelled axes */

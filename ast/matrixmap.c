@@ -37,20 +37,20 @@ f     The MatrixMap class does not define any new routines beyond those
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: D.S. Berry (Starlink)
@@ -141,6 +141,15 @@ f     The MatrixMap class does not define any new routines beyond those
 *        depends on a mixture of selected and unselected inputs.
 *     16-JUL-2009 (DSB):
 *        MatPerm: Fix memory leak (mm2 was not being annulled).
+*     2-OCT-2012 (DSB):
+*        - Check for Infs as well as NaNs.
+*        - In MapSplit do not split the MatrixMap if the resulting
+*          matrix would contain only bad elements.
+*        - Report an error if an attempt is made to create a MatrixMap
+*          containing only bad elements.
+*     4-NOV-2013 (DSB):
+*        Allow a full form MatrixMap to be simplified to a diagonal form 
+*        MatrixMap if all the off-diagonal values are zero.
 *class--
 */
 
@@ -1612,6 +1621,7 @@ static int MapMerge( AstMapping *this, int where, int series, int *nmap,
    const char *class2;   /* Pointer to second Mapping class string */
    const char *nclass;   /* Pointer to neighbouring Mapping class */
    double *b;            /* Pointer to scale terms */
+   double *new_mat;      /* Pointer to elements of new MatrixMap */
    int *invlt;           /* New invert flags list pointer */
    int do1;              /* Would a backward swap make a simplification? */
    int do2;              /* Would a forward swap make a simplification? */
@@ -1620,6 +1630,7 @@ static int MapMerge( AstMapping *this, int where, int series, int *nmap,
    int i;                /* Loop counter */
    int ic[2];            /* Copies of supplied invert flags to swap */
    int invert;           /* Should the inverted Mapping be used? */
+   int j;                /* Loop counter */
    int neighbour;        /* Index of Mapping with which to swap */
    int nin;              /* Number of input coordinates for MatrixMap */
    int nmapt;            /* No. of Mappings in list */
@@ -1691,6 +1702,28 @@ static int MapMerge( AstMapping *this, int where, int series, int *nmap,
          } else {
             map2 = (AstMapping *) astZoomMap( nin, (mm->f_matrix)[ 0 ], "", status );
          }
+      }
+
+/* If the MatrixMap is a full matrix but all off-diagnal elements are
+   zero, it can be replaced by a diagonal MatrixMap. */
+   } else if( mm->form == FULL && nin == nout && mm->f_matrix ){
+      new_mat = astMalloc( sizeof( double )*nin );
+      b = mm->f_matrix;
+      for( i = 0; i < nin && new_mat; i++ ){
+         for( j = 0; j < nout; j++,b++ ){
+            if( i == j ) {
+               new_mat[ i ] = *b;
+            } else if( *b != 0.0 ) {
+               new_mat = astFree( new_mat );
+               break;
+            }
+         }
+      }
+
+      if( new_mat ) {
+         map2 = (AstMapping *) astMatrixMap( nin, nout, 1, new_mat, "",
+                                             status );
+         new_mat = astFree( new_mat );
       }
    }
 
@@ -2119,6 +2152,7 @@ static int *MapSplit( AstMapping *this_map, int nin, const int *in, AstMapping *
    double *rmat;              /* Pointer to matrix for returned MatrixMap */
    double el;                 /* Next element value in supplied matrix */
    int *result;               /* Pointer to returned array */
+   int good;                  /* Would new matrix contain any good values/ */
    int i;                     /* Loop count */
    int icol;                  /* Column index within supplied MatrixMap */
    int iel;                   /* Index of next element from the input matrix */
@@ -2185,10 +2219,12 @@ static int *MapSplit( AstMapping *this_map, int nin, const int *in, AstMapping *
          if( !mat || !astOK ) {
             ok = 0;
             nout = 0;
+            good = 0;
 
 /* Otherwise, loop round all the rows in the matrix. */
          } else {
             nout = 0;
+            good = 0;
             pmat = rmat;
             iel = 0;
             for( irow = 0; irow < nrow; irow++ ) {
@@ -2241,7 +2277,12 @@ static int *MapSplit( AstMapping *this_map, int nin, const int *in, AstMapping *
 
 /* Copy the elements of the current matrix row which correspond to the
    selected inputs into the new matrix. */
-                  for( i = 0; i < nin; i++ ) *(pmat++) = prow[ in[ i ] ];
+                  for( i = 0; i < nin; i++ ) {
+                    if( astISGOOD( prow[ in[ i ] ] ) ) {
+                        *(pmat++) = prow[ in[ i ] ];
+                        good = 1;
+                     }
+                  }
                }
 
 /* If this output depends on a selected input, but also depends on an
@@ -2253,8 +2294,9 @@ static int *MapSplit( AstMapping *this_map, int nin, const int *in, AstMapping *
             }
          }
 
+
 /* If the returned Mapping can be created, create it. */
-         if( ok && nout > 0 ) {
+         if( ok && nout > 0 && good ) {
             *map = (AstMapping *) astMatrixMap( nin, nout, 0, rmat, "", status );
 
 /* Otherwise, free the returned array. */
@@ -2526,7 +2568,7 @@ static void MatPermSwap( AstMapping **maps, int *inverts, int imm, int *status )
 *     void MatPermSwap( AstMapping **maps, int *inverts, int imm )
 
 *  Class Membership:
-*     WinMap member function
+*     MatrixMap member function
 
 *  Description:
 *     A list of two Mappings is supplied containing a PermMap and a
@@ -4512,7 +4554,6 @@ static int ScalingRowCol( AstMatrixMap *map, int axis, int *status ){
    double *el;               /* Pointer to matrix element */
    int i;                    /* Element count */
    int ncol;                 /* No. of input coordinates */
-   int nrow;                 /* No. of output coordinates */
    int ret;                  /* Returned flag */
 
 /* Initialise */
@@ -4531,9 +4572,8 @@ static int ScalingRowCol( AstMatrixMap *map, int axis, int *status ){
 /* Assume the row/column gives a unit mapping. */
       ret = 1;
 
-/* Get the number of input and output axes for the MatrixMap. */
+/* Get the number of input axes for the MatrixMap. */
       ncol = astGetNin( map );
-      nrow = astGetNout( map );
 
 /* Check that all elements of the "axis"th row are effectively zero, except
    for the "axis"th element which must be non-zero. */
@@ -5156,6 +5196,7 @@ AstMatrixMap *astInitMatrixMap_( void *mem, size_t size, int init,
    double *imat;                   /* Pointer to the inverse matrix */
    int i;                          /* Loop count */
    int nel;                        /* No. of elements in matrix array */
+   int nuse;                       /* Number of usable matrix elements */
    int used_form;                  /* Form limited to 0, 1 or 2 */
 
 /* Check the global status. */
@@ -5213,9 +5254,23 @@ AstMatrixMap *astInitMatrixMap_( void *mem, size_t size, int init,
    values in it. */
          fmat = (double *) astStore( NULL, (void *) matrix,
                                      sizeof(double)*(size_t)nel );
-/* Replace any NaNs by AST__BAD */
-         for( i = 0; i < nel; i++ ) {
-            if( astISNAN(fmat[ i ]) ) fmat[ i ] = AST__BAD;
+
+/* Replace any NaNs by AST__BAD and count the number of usable values. */
+         if( nel > 0 ) {
+            nuse = 0;
+            for( i = 0; i < nel; i++ ) {
+               if( !astISFINITE(fmat[ i ]) ) {
+                  fmat[ i ] = AST__BAD;
+               } else if( fmat[ i ] != AST__BAD ) {
+                  nuse++;
+               }
+            }
+
+/* Report an error if there are no usable values. */
+            if( nuse == 0 && astOK ) {
+               astError( AST__MTRMT, "astInitMatrixMap(%s): Supplied matrix "
+                         "contains only bad values.",  status, name );
+            }
          }
 
 /* Create an inverse matrix if possible. */

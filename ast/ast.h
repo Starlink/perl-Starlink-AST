@@ -24,20 +24,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: D.S. Berry (STARLINK)
@@ -45,7 +45,7 @@
 *     {enter_new_authors_here}
 
 *  History:
-*     26-MAY-2012 (makeh):
+*     4-AUG-2014 (makeh):
 *        Original version, generated automatically from the internal header
 *        files by the "makeh" script.
 *     {enter_changes_here}
@@ -59,6 +59,7 @@
 
 /* xml. */
 /* ==== */
+
 #define AST__XMLBAD 0
 #define AST__XMLOBJECT 198263577
 #define AST__XMLELEM 182874779
@@ -296,6 +297,7 @@ void astXmlSetDTDec_( AstXmlDocument *, const char *, const char *, const char *
 #define astXmlCopy(this) astXmlCopy_(astXmlCheckObject(this,1),STATUS_PTR)
 /* wcstrig. */
 /* ======== */
+
 double astCosd(const double);
 double astSind(const double);
 double astTand(const double);
@@ -305,14 +307,9 @@ double astATand(const double);
 double astATan2d(const double, const double);
 
 #define WCSTRIG_TOL 1e-10
-/* levmar. */
-/* ======= */
-int dlevmar_der(void (*func)(double *p, double *hx, int m, int n, void *adata),
-                void (*jacf)(double *p, double *j, int m, int n, void *adata),
-                double *p, double *x, int m, int n, int itmax, double *opts,
-                double *info, double *work, double *covar, void *adata);
 /* proj. */
 /* ===== */
+
 #define WCSLIB_MXPAR 100
 
 extern int npcode;
@@ -419,6 +416,9 @@ struct AstPrjPrm {
    int astHPXset(struct AstPrjPrm *);
    int astHPXfwd(const double, const double, struct AstPrjPrm *, double *, double *);
    int astHPXrev(const double, const double, struct AstPrjPrm *, double *, double *);
+   int astXPHset(struct AstPrjPrm *);
+   int astXPHfwd(const double, const double, struct AstPrjPrm *, double *, double *);
+   int astXPHrev(const double, const double, struct AstPrjPrm *, double *, double *);
 
    int astTPNset(struct AstPrjPrm *);
    int astTPNfwd(const double, const double, struct AstPrjPrm *, double *, double *);
@@ -429,7 +429,9 @@ extern const char *astPRJfwd_errmsg[];
 extern const char *astPRJrev_errmsg[];
 /* memory. */
 /* ======= */
+
 #include <stddef.h>
+
 #define astERROR_INVOKE(function) (astAt_(NULL,__FILE__,__LINE__,0,astGetStatusPtr),(function))
 typedef struct AstErrorContext {
    int reporting;
@@ -522,20 +524,23 @@ char *astChrSub_( const char *, const char *, const char *[], int, int * );
 #define astMemoryWarning(threshold)
 /* error. */
 /* ====== */
+
 /* globals. */
 /* ======== */
+
 #define astDECLARE_GLOBALS
 #define astGET_GLOBALS(This)
 #define astINIT_GLOBALS
 /* unit. */
 /* ===== */
-#define AST__VMAJOR 7
-#define AST__VMINOR 0
-#define AST__RELEASE 3
 
-#define AST_MAJOR_VERS 7
+#define AST__VMAJOR 8
+#define AST__VMINOR 0
+#define AST__RELEASE 0
+
+#define AST_MAJOR_VERS 8
 #define AST_MINOR_VERS 0
-#define AST_RELEASE 3
+#define AST_RELEASE 0
 
 #include <stdarg.h>
 #include <float.h>
@@ -780,10 +785,12 @@ int astReplaceNaN_( AstPointSet *, int * );
 #define astAppendPoints(this,that) astINVOKE(O,astAppendPoints_(astCheckPointSet(this),astCheckPointSet(that),STATUS_PTR))
 #define astBndPoints(this,lbnd,ubnd) astINVOKE(V,astBndPoints_(astCheckPointSet(this),lbnd,ubnd,STATUS_PTR))
 #define astReplaceNaN(this) astINVOKE(V,astReplaceNaN_(astCheckPointSet(this),STATUS_PTR))
+
+#include <stdint.h>
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__MAPPING_GETATTRIB_BUFF_LEN 50
-#define AST__MAPPING_FUNPN_MAX_CACHE 5
+#define AST__MAPPING_RATEFUN_MAX_CACHE 5
 
 #define AST__URESAMP1 (1)
 #define AST__URESAMP2 (2)
@@ -798,6 +805,7 @@ int astReplaceNaN_( AstPointSet *, int * );
 #define AST__VARWGT (1024)
 #define AST__NOBAD (2048)
 #define AST__DISVAR (4096)
+#define AST__NONORM (8192)
 
 #define AST__UKERN1 (1)
 
@@ -813,7 +821,6 @@ int astReplaceNaN_( AstPointSet *, int * );
 #define AST__SOMB (12)
 #define AST__SOMBCOS (13)
 
-#include <stdint.h>
 typedef int64_t INT_BIG;
 typedef uint64_t UINT_BIG;
 typedef struct AstMapping {
@@ -830,7 +837,7 @@ typedef struct AstMapping {
 } AstMapping;
 astPROTO_CHECK(Mapping)
 astPROTO_ISA(Mapping)
-#define PROTO_GENERIC_ALL(X,Xtype) int astResample##X##_( AstMapping *, int, const int [], const int [], const Xtype [], const Xtype [], int, void (*)(), const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], int * );
+#define PROTO_GENERIC_ALL(X,Xtype) int astResample##X##_( AstMapping *, int, const int [], const int [], const Xtype [], const Xtype [], int, void (*)( void ), const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], int * );
 PROTO_GENERIC_ALL(B,signed char)
 PROTO_GENERIC_ALL(D,double)
 PROTO_GENERIC_ALL(F,float)
@@ -846,7 +853,7 @@ PROTO_GENERIC_ALL(US,unsigned short int)
 
 PROTO_GENERIC_ALL(LD,long double)
 
-#define PROTO_GENERIC_DFI(X,Xtype) void astRebin##X##_( AstMapping *, double, int, const int [], const int [], const Xtype [], const Xtype [], int, const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], int * ); void astRebinSeq##X##_( AstMapping *, double, int, const int [], const int [], const Xtype [], const Xtype [], int, const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], double [], int *, int * );
+#define PROTO_GENERIC_DFI(X,Xtype) void astRebin##X##_( AstMapping *, double, int, const int [], const int [], const Xtype [], const Xtype [], int, const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], int * ); void astRebinSeq##X##_( AstMapping *, double, int, const int [], const int [], const Xtype [], const Xtype [], int, const double [], int, double, int, Xtype, int, const int [], const int [], const int [], const int [], Xtype [], Xtype [], double [], int64_t *, int * );
 
 PROTO_GENERIC_DFI(D,double)
 PROTO_GENERIC_DFI(F,float)
@@ -1218,12 +1225,21 @@ enum { AST__NOFIT = 233934354 };
 enum { AST__ISNAN = 233934362 };
 
 enum { AST__WRERR = 233934370 };
+
+enum { AST__BDVNM = 233934378 };
+
+enum { AST__MIRRO = 233934386 };
+
+enum { AST__MNPCK = 233934394 };
 /* version. */
 /* ======== */
+
 /* object. */
 /* ======= */
+
 /* keymap. */
 /* ======= */
+
 #define AST__BADTYPE 0
 #define AST__INTTYPE 1
 #define AST__DOUBLETYPE 2
@@ -1252,6 +1268,7 @@ typedef struct AstMapEntry {
    struct AstMapEntry *snext;
    struct AstMapEntry *sprev;
    int member;
+   int keymember;
    int sortby;
 } AstMapEntry;
 
@@ -1308,6 +1325,7 @@ int astMapGetElemI_( AstKeyMap *, const char *, int, int *, int * );
 int astMapGetElemP_( AstKeyMap *, const char *, int, void **, int * );
 int astMapGetElemS_( AstKeyMap *, const char *, int, short int *, int * );
 int astMapHasKey_( AstKeyMap *, const char *, int * );
+int astMapDefined_( AstKeyMap *, const char *, int * );
 int astMapLenC_( AstKeyMap *, const char *, int * );
 int astMapLength_( AstKeyMap *, const char *, int * );
 int astMapSize_( AstKeyMap *, int * );
@@ -1394,6 +1412,7 @@ void astMapRename_( AstKeyMap *, const char *, const char *, int * );
 #define astMapLength(this,key) astINVOKE(V,astMapLength_(astCheckKeyMap(this),key,STATUS_PTR))
 #define astMapLenC(this,key) astINVOKE(V,astMapLenC_(astCheckKeyMap(this),key,STATUS_PTR))
 #define astMapHasKey(this,key) astINVOKE(V,astMapHasKey_(astCheckKeyMap(this),key,STATUS_PTR))
+#define astMapDefined(this,key) astINVOKE(V,astMapDefined_(astCheckKeyMap(this),key,STATUS_PTR))
 #define astMapKey(this,index) astINVOKE(V,astMapKey_(astCheckKeyMap(this),index,STATUS_PTR))
 #define astMapType(this,key) astINVOKE(V,astMapType_(astCheckKeyMap(this),key,STATUS_PTR))
 #define astMapGet0P(this,key,value) astINVOKE(V,astMapGet0P_(astCheckKeyMap(this),key,value,STATUS_PTR))
@@ -1405,6 +1424,7 @@ void astMapRename_( AstKeyMap *, const char *, const char *, int * );
 #define astMapGetElemA(this,key,elem,value) astINVOKE(V,astMapGetElemAId_(astCheckKeyMap(this),key,elem,(AstObject **)(value),STATUS_PTR))
 /* table. */
 /* ====== */
+
 typedef struct AstTable {
 
    AstKeyMap keymap;
@@ -1447,6 +1467,7 @@ int astHasParameter_( AstTable *, const char *, int * );
 #define astHasParameter(this,param) astINVOKE(V,astHasParameter_(astCheckTable(this),param,STATUS_PTR))
 /* fitstable. */
 /* ========== */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__NOTYPE -1
@@ -1474,6 +1495,7 @@ typedef struct AstFitsChan {
    int iwc;
    int clean;
    int fitsdigits;
+   char *fitsaxisorder;
    char *warnings;
    void *card;
    void *head;
@@ -1519,6 +1541,7 @@ AstFitsChan *astFitsChanForId_( const char *(*)( void ),
    void astReadFits_( AstFitsChan *, int * );
    void astWriteFits_( AstFitsChan *, int * );
    void astEmptyFits_( AstFitsChan *, int * );
+   void astShowFits_( AstFitsChan *, int * );
    void astPurgeWCS_( AstFitsChan *, int * );
    void astPutCards_( AstFitsChan *, const char *, int * );
    void astPutFits_( AstFitsChan *, const char [81], int, int * );
@@ -1607,6 +1630,8 @@ AstFitsChan *astFitsChanForId_( const char *(*)( void ),
 
 #define astEmptyFits(this) astINVOKE(V,astEmptyFits_(astCheckFitsChan(this),STATUS_PTR))
 
+#define astShowFits(this) astINVOKE(V,astShowFits_(astCheckFitsChan(this),STATUS_PTR))
+
 #define astTableSource(this,tabsource) astINVOKE(V,astTableSource_(astCheckFitsChan(this),tabsource,STATUS_PTR))
 typedef struct AstFitsTable {
 
@@ -1638,8 +1663,10 @@ void astPutColumnData_( AstFitsTable *, const char *, int, size_t, void *, int *
 #define astPutColumnData(this,column,clen,size,coldata) astINVOKE(V,astPutColumnData_(astCheckFitsTable(this),column,clen,size,coldata,STATUS_PTR))
 /* pointset. */
 /* ========= */
+
 /* axis. */
 /* ===== */
+
 typedef struct AstAxis {
 
    AstObject object;
@@ -1695,11 +1722,12 @@ AstSkyAxis *astSkyAxisId_( const char *, ... )__attribute__((format(printf,1,2))
 #define astIsASkyAxis(this) astINVOKE_ISA(SkyAxis,this)
 
 #define astSkyAxis astINVOKE(F,astSkyAxisId_)
-double astDrange_( double );
 /* mapping. */
 /* ======== */
+
 /* cmpmap. */
 /* ======= */
+
 typedef struct AstCmpMap {
 
    AstMapping mapping;
@@ -1722,6 +1750,7 @@ AstCmpMap *astCmpMapId_( void *, void *, int, const char *, ... )__attribute__((
 #define astCmpMap astINVOKE(F,astCmpMapId_)
 /* dssmap. */
 /* ======= */
+
 typedef struct AstDssMap {
 
    AstMapping mapping;
@@ -1737,6 +1766,7 @@ astPROTO_ISA(DssMap)
 #define astIsADssMap(this) astINVOKE_ISA(DssMap,this)
 /* grismmap. */
 /* ========= */
+
 typedef struct AstGrismMap {
 
    AstMapping mapping;
@@ -1766,6 +1796,7 @@ AstGrismMap *astGrismMapId_( const char *, ... )__attribute__((format(printf,1,2
 #define astGrismMap astINVOKE(F,astGrismMapId_)
 /* intramap. */
 /* ========= */
+
 #define AST__NOFWD (1U)
 #define AST__NOINV (2U)
 #define AST__SIMPFI (4U)
@@ -1795,6 +1826,7 @@ void astIntraRegFor_( const char *, int, int, void (*)( AstMapping *, int, int, 
 #define astIntraRegFor(name,nin,nout,tran,tran_wrap,flags,purpose,author,contact) astIntraRegFor_(name,nin,nout,tran,tran_wrap,flags,purpose,author,contact,STATUS_PTR)
 /* lutmap. */
 /* ======= */
+
 typedef struct AstLutMap {
 
    AstMapping mapping;
@@ -1825,6 +1857,7 @@ AstLutMap *astLutMapId_( int, const double [], double, double, const char *, ...
 #define astLutMap astINVOKE(F,astLutMapId_)
 /* mathmap. */
 /* ======== */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST_MATHMAP_RAND_CONTEXT_NTAB_ (32)
@@ -1869,6 +1902,7 @@ AstMathMap *astMathMapId_( int, int, int, const char *[], int, const char *[],
 #define astMathMap astINVOKE(F,astMathMapId_)
 /* matrixmap. */
 /* ========== */
+
 typedef struct AstMatrixMap {
 
    AstMapping mapping;
@@ -1890,6 +1924,7 @@ AstMatrixMap *astMatrixMapId_( int, int, int, const double[], const char *, ... 
 #define astMatrixMap astINVOKE(F,astMatrixMapId_)
 /* pcdmap. */
 /* ======= */
+
 typedef struct AstPcdMap {
 
    AstMapping mapping;
@@ -1910,6 +1945,7 @@ AstPcdMap *astPcdMapId_( double, const double [2], const char *, ... )__attribut
 #define astPcdMap astINVOKE(F,astPcdMapId_)
 /* permmap. */
 /* ======== */
+
 typedef struct AstPermMap {
 
    AstMapping mapping;
@@ -1932,6 +1968,7 @@ AstPermMap *astPermMapId_( int, const int [], int, const int [],
 #define astPermMap astINVOKE(F,astPermMapId_)
 /* polymap. */
 /* ======== */
+
 typedef struct AstPolyMap {
 
    AstMapping mapping;
@@ -1963,6 +2000,7 @@ AstPolyMap *astPolyTran_( AstPolyMap *, int, double, double, int, const double *
 #define astPolyTran(this,forward,acc,maxacc,maxorder,lbnd,ubnd) astINVOKE(O,astPolyTran_(astCheckPolyMap(this),forward,acc,maxacc,maxorder,lbnd,ubnd,STATUS_PTR))
 /* ratemap. */
 /* ======== */
+
 typedef struct AstRateMap {
 
    AstMapping mapping;
@@ -1984,6 +2022,7 @@ AstRateMap *astRateMapId_( void *, int, int, const char *, ... )__attribute__((f
 #define astRateMap astINVOKE(F,astRateMapId_)
 /* normmap. */
 /* ======== */
+
 #define STATUS_PTR astGetStatusPtr
 typedef int AstSystemType;
 
@@ -2011,6 +2050,7 @@ typedef struct AstFrame {
    AstSystemType system;
    AstSystemType alignsystem;
    int flags;
+   struct AstFrameSet *variants;
 } AstFrame;
 typedef struct AstLineDef {
    AstFrame *frame;
@@ -2029,6 +2069,8 @@ struct AstFrameSet;
 #define AST__CURRENT (-1)
 #define AST__NOFRAME (-99)
 #define AST__ALLFRAMES (-199)
+#define AST__FRAMESET_GETALLVARIANTS_BUFF_LEN 200
+#define AST__FRAMESET_GETATTRIB_BUFF_LEN 200
 
 typedef struct AstFrameSet {
 
@@ -2036,6 +2078,7 @@ typedef struct AstFrameSet {
 
    AstFrame **frame;
    AstMapping **map;
+   int *varfrm;
    int *invert;
    int *link;
    int *node;
@@ -2051,6 +2094,8 @@ AstFrameSet *astFrameSetId_( void *, const char *, ... )__attribute__((format(pr
 AstFrame *astGetFrame_( AstFrameSet *, int, int * );
 AstMapping *astGetMapping_( AstFrameSet *, int, int, int * );
 void astAddFrame_( AstFrameSet *, int , AstMapping *, AstFrame *, int * );
+void astAddVariant_( AstFrameSet *, AstMapping *, const char *, int * );
+void astMirrorVariants_( AstFrameSet *, int, int * );
 void astRemapFrame_( AstFrameSet *, int, AstMapping *, int * );
 void astRemoveFrame_( AstFrameSet *, int, int * );
 #define astCheckFrameSet(this) astINVOKE_CHECK(FrameSet,this,0)
@@ -2060,6 +2105,8 @@ void astRemoveFrame_( AstFrameSet *, int, int * );
 
 #define astFrameSet astINVOKE(F,astFrameSetId_)
 #define astAddFrame(this,iframe,map,frame) astINVOKE(V,astAddFrame_(astCheckFrameSet(this),iframe,(((iframe)!=AST__ALLFRAMES)?astCheckMapping(map):NULL),astCheckFrame(frame),STATUS_PTR))
+#define astAddVariant(this,map,name) astINVOKE(V,astAddVariant_(astCheckFrameSet(this),map?astCheckMapping(map):NULL,name,STATUS_PTR))
+#define astMirrorVariants(this,iframe) astINVOKE(V,astMirrorVariants_(astCheckFrameSet(this),iframe,STATUS_PTR))
 #define astGetFrame(this,iframe) astINVOKE(O,astGetFrame_(astCheckFrameSet(this),iframe,STATUS_PTR))
 #define astGetMapping(this,iframe1,iframe2) astINVOKE(O,astGetMapping_(astCheckFrameSet(this),iframe1,iframe2,STATUS_PTR))
 #define astRemapFrame(this,iframe,map) astINVOKE(V,astRemapFrame_(astCheckFrameSet(this),iframe,astCheckMapping(map),STATUS_PTR))
@@ -2084,6 +2131,8 @@ void astNorm_( AstFrame *, double[], int * );
 void astOffset_( AstFrame *, const double[], const double[], double, double[], int * );
 void astResolve_( AstFrame *, const double [], const double [], const double [], double [], double *, double *, int * );
 void astSetActiveUnit_( AstFrame *, int, int * );
+AstFrameSet *astGetFrameVariants_( AstFrame *, int * );
+void astSetFrameVariants_( AstFrame *, AstFrameSet *, int * );
 AstFrame *astPickAxesId_( AstFrame *, int, const int[], AstMapping **, int * );
 const char *astFormatId_( AstFrame *, int, double, int * );
 int astUnformatId_( AstFrame *, int, const char *, double *, int * );
@@ -2131,6 +2180,7 @@ AstNormMap *astNormMapId_( void *, const char *, ... )__attribute__((format(prin
 #define astNormMap astINVOKE(F,astNormMapId_)
 /* shiftmap. */
 /* ========= */
+
 typedef struct AstShiftMap {
 
    AstMapping mapping;
@@ -2150,6 +2200,7 @@ AstShiftMap *astShiftMapId_( int, const double [], const char *, ... )__attribut
 #define astShiftMap astINVOKE(F,astShiftMapId_)
 /* slamap. */
 /* ======= */
+
 #define AST__AU 1.49597870E11
 
 #define AST__SOLRAD 6.96E8
@@ -2176,6 +2227,7 @@ void astSlaAdd_( AstSlaMap *, const char *, const double[], int * );
 #define astSlaAdd(this,cvt,args) astINVOKE(V,astSlaAdd_(astCheckSlaMap(this),cvt,args,STATUS_PTR))
 /* specmap. */
 /* ======== */
+
 #define AST__C 2.99792458E8
 #define AST__H 6.6260755E-34
 typedef struct AstSpecMap {
@@ -2200,6 +2252,7 @@ void astSpecAdd_( AstSpecMap *, const char *, const double[], int * );
 #define astSpecAdd(this,cvt,args) astINVOKE(V,astSpecAdd_(astCheckSpecMap(this),cvt,args,STATUS_PTR))
 /* sphmap. */
 /* ======= */
+
 typedef struct AstSphMap {
 
    AstMapping mapping;
@@ -2219,6 +2272,7 @@ AstSphMap *astSphMapId_( const char *, ...)__attribute__((format(printf,1,2)));
 #define astSphMap astINVOKE(F,astSphMapId_)
 /* timemap. */
 /* ======== */
+
 typedef struct AstTimeMap {
 
    AstMapping mapping;
@@ -2241,6 +2295,7 @@ void astTimeAdd_( AstTimeMap *, const char *, const double[], int * );
 #define astTimeAdd(this,cvt,args) astINVOKE(V,astTimeAdd_(astCheckTimeMap(this),cvt,args,STATUS_PTR))
 /* selectormap. */
 /* ============ */
+
 #define STATUS_PTR astGetStatusPtr
 
 typedef struct AstRegion {
@@ -2265,6 +2320,7 @@ typedef struct AstRegion {
 astPROTO_CHECK(Region)
 astPROTO_ISA(Region)
 AstFrame *astGetRegionFrame_( AstRegion *, int * );
+AstFrameSet *astGetRegionFrameSet_( AstRegion *, int * );
 int astOverlap_( AstRegion *, AstRegion *, int * );
 void astNegate_( AstRegion *, int * );
 
@@ -2293,6 +2349,7 @@ AstRegion *astMapRegionId_( AstRegion *, AstMapping *, AstFrame *, int * );
 
 #define astIsARegion(this) astINVOKE_ISA(Region,this)
 #define astGetRegionFrame(this) astINVOKE(O,astGetRegionFrame_(astCheckRegion(this),STATUS_PTR))
+#define astGetRegionFrameSet(this) astINVOKE(O,astGetRegionFrameSet_(astCheckRegion(this),STATUS_PTR))
 #define astNegate(this) astINVOKE(V,astNegate_(astCheckRegion(this),STATUS_PTR))
 #define astOverlap(this,that) astINVOKE(V,astOverlap_(astCheckRegion(this),astCheckRegion(that),STATUS_PTR))
 
@@ -2336,6 +2393,7 @@ AstSelectorMap *astSelectorMapId_( int, void **, double, const char *, ... )__at
 #define astSelectorMap astINVOKE(F,astSelectorMapId_)
 /* switchmap. */
 /* ========== */
+
 typedef struct AstSwitchMap {
 
    AstMapping mapping;
@@ -2360,6 +2418,7 @@ AstSwitchMap *astSwitchMapId_( void *, void *, int, void **, const char *, ... )
 #define astSwitchMap astINVOKE(F,astSwitchMapId_)
 /* tranmap. */
 /* ======== */
+
 typedef struct AstTranMap {
 
    AstMapping mapping;
@@ -2381,6 +2440,7 @@ AstTranMap *astTranMapId_( void *, void *, const char *, ... )__attribute__((for
 #define astTranMap astINVOKE(F,astTranMapId_)
 /* unitmap. */
 /* ======== */
+
 typedef struct AstUnitMap {
 
    AstMapping mapping;
@@ -2398,6 +2458,7 @@ AstUnitMap *astUnitMapId_( int, const char *, ... )__attribute__((format(printf,
 #define astUnitMap astINVOKE(F,astUnitMapId_)
 /* wcsmap. */
 /* ======= */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__WCSMX 10
@@ -2440,7 +2501,8 @@ AstUnitMap *astUnitMapId_( int, const char *, ... )__attribute__((format(printf,
 #define AST__GLS 28
 #define AST__TPN 29
 #define AST__HPX 30
-#define AST__WCSBAD 31
+#define AST__XPH 31
+#define AST__WCSBAD 32
 typedef struct AstWcsMap {
 
    AstMapping mapping;
@@ -2466,6 +2528,7 @@ AstWcsMap *astWcsMapId_( int, int, int, int, const char *, ... )__attribute__((f
 #define astWcsMap astINVOKE(F,astWcsMapId_)
 /* winmap. */
 /* ======= */
+
 typedef struct AstWinMap {
 
    AstMapping mapping;
@@ -2486,6 +2549,7 @@ AstWinMap *astWinMapId_( int, const double [], const double [], const double [],
 #define astWinMap astINVOKE(F,astWinMapId_)
 /* zoommap. */
 /* ======== */
+
 typedef struct AstZoomMap {
 
    AstMapping mapping;
@@ -2504,8 +2568,10 @@ AstZoomMap *astZoomMapId_( int, double, const char *, ... )__attribute__((format
 #define astZoomMap astINVOKE(F,astZoomMapId_)
 /* frame. */
 /* ====== */
+
 /* cmpframe. */
 /* ========= */
+
 #define STATUS_PTR astGetStatusPtr
 typedef struct AstCmpFrame {
 
@@ -2527,6 +2593,7 @@ AstCmpFrame *astCmpFrameId_( void *, void *, const char *, ... )__attribute__((f
 #define astCmpFrame astINVOKE(F,astCmpFrameId_)
 /* specfluxframe. */
 /* ============== */
+
 #define STATUS_PTR astGetStatusPtr
 typedef struct AstSpecFluxFrame {
 
@@ -2545,6 +2612,7 @@ AstSpecFluxFrame *astSpecFluxFrameId_( void *, void *, const char *, ... )__attr
 #define astSpecFluxFrame astINVOKE(F,astSpecFluxFrameId_)
 /* fluxframe. */
 /* ========== */
+
 #define STATUS_PTR astGetStatusPtr
 typedef struct AstSkyLastTable {
    double obslat;
@@ -2643,8 +2711,10 @@ AstFluxFrame *astFluxFrameId_( double, void *, const char *, ... )__attribute__(
 #define astFluxFrame astINVOKE(F,astFluxFrameId_)
 /* frameset. */
 /* ========= */
+
 /* plot. */
 /* ===== */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__NPID 20
@@ -2918,10 +2988,13 @@ AstPlot3D *astPlot3DId_( void *, const float [], const double [], const char *, 
 #define astPlot3D astINVOKE(F,astPlot3DId_)
 /* skyframe. */
 /* ========= */
+
 /* specframe. */
 /* ========== */
+
 /* dsbspecframe. */
 /* ============= */
+
 typedef struct AstDSBSpecFrame {
 
    AstSpecFrame specframe;
@@ -2944,8 +3017,10 @@ AstDSBSpecFrame *astDSBSpecFrameId_( const char *, ... )__attribute__((format(pr
 #define astDSBSpecFrame astINVOKE(F,astDSBSpecFrameId_)
 /* region. */
 /* ======= */
+
 /* box. */
 /* ==== */
+
 typedef struct AstBox {
 
    AstRegion region;
@@ -2971,6 +3046,7 @@ AstBox *astBoxId_( void *, int, const double[], const double[], AstRegion *, con
 #define astBox astINVOKE(F,astBoxId_)
 /* circle. */
 /* ======= */
+
 typedef struct AstCircle {
 
    AstRegion region;
@@ -2997,6 +3073,7 @@ void astCirclePars_( AstCircle *, double *, double *, double *, int * );
 #define astCirclePars(this,centre,radius,p1) astINVOKE(V,astCirclePars_(astCheckCircle(this),centre,radius,p1,STATUS_PTR))
 /* cmpregion. */
 /* ========== */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__AND 1
@@ -3030,6 +3107,7 @@ AstCmpRegion *astCmpRegionId_( void *, void *, int, const char *, ... )__attribu
 #define astCmpRegion astINVOKE(F,astCmpRegionId_)
 /* ellipse. */
 /* ======== */
+
 typedef struct AstEllipse {
 
    AstRegion region;
@@ -3060,6 +3138,7 @@ void astEllipsePars_( AstEllipse *, double[2], double *, double *, double *, dou
 #define astEllipsePars(this,centre,a,b,angle,p1,p2) astINVOKE(V,astEllipsePars_(astCheckEllipse(this),centre,a,b,angle,p1,p2,STATUS_PTR))
 /* interval. */
 /* ========= */
+
 typedef struct AstInterval {
 
    AstRegion region;
@@ -3082,6 +3161,7 @@ AstInterval *astIntervalId_( void *, const double[], const double[], AstRegion *
 #define astInterval astINVOKE(F,astIntervalId_)
 /* nullregion. */
 /* =========== */
+
 typedef struct AstNullRegion {
 
    AstRegion region;
@@ -3099,6 +3179,7 @@ AstNullRegion *astNullRegionId_( void *, AstRegion *, const char *, ... )__attri
 #define astNullRegion astINVOKE(F,astNullRegionId_)
 /* pointlist. */
 /* ========== */
+
 typedef struct AstPointList {
 
    AstRegion region;
@@ -3118,6 +3199,7 @@ AstPointList *astPointListId_( void *, int, int, int, const double *, AstRegion 
 #define astPointList astINVOKE(F,astPointListId_)
 /* polygon. */
 /* ======== */
+
 #define STATUS_PTR astGetStatusPtr
 typedef int AstTimeScaleType;
 
@@ -3160,6 +3242,7 @@ typedef struct AstPolygon {
    double totlen;
    int acw;
    int stale;
+   int simp_vertices;
 } AstPolygon;
 astPROTO_CHECK(Polygon)
 astPROTO_ISA(Polygon)
@@ -3179,6 +3262,19 @@ AstPolygon *astOutlineUB_( unsigned char, int, const unsigned char[], const int[
 AstPolygon *astOutlineUI_( unsigned int, int, const unsigned int[], const int[2], const int[2], double, int, const int[2], int, int * );
 AstPolygon *astOutlineUL_( unsigned long int, int, const unsigned long int[], const int[2], const int[2], double, int, const int[2], int, int * );
 AstPolygon *astOutlineUS_( unsigned short int, int, const unsigned short int[], const int[2], const int[2], double, int, const int[2], int, int * );
+
+AstPolygon *astConvexLD_( long double, int, const long double[], const int[2], const int[2], int, int * );
+
+AstPolygon *astConvexB_( signed char, int, const signed char[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexD_( double, int, const double[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexF_( float, int, const float[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexI_( int, int, const int[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexL_( long int, int, const long int[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexS_( short int, int, const short int[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexUB_( unsigned char, int, const unsigned char[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexUI_( unsigned int, int, const unsigned int[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexUL_( unsigned long int, int, const unsigned long int[], const int[2], const int[2], int, int * );
+AstPolygon *astConvexUS_( unsigned short int, int, const unsigned short int[], const int[2], const int[2], int, int * );
 #define astCheckPolygon(this) astINVOKE_CHECK(Polygon,this,0)
 #define astVerifyPolygon(this) astINVOKE_CHECK(Polygon,this,1)
 
@@ -3199,8 +3295,22 @@ AstPolygon *astOutlineUS_( unsigned short int, int, const unsigned short int[], 
 #define astOutlineUI(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix) astINVOKE(O,astOutlineUI_(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix,STATUS_PTR))
 #define astOutlineUL(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix) astINVOKE(O,astOutlineUL_(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix,STATUS_PTR))
 #define astOutlineUS(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix) astINVOKE(O,astOutlineUS_(value,oper,array,lbnd,ubnd,maxerr,maxvert,inside,starpix,STATUS_PTR))
+
+#define astConvexLD(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O,astConvexLD_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+
+#define astConvexB(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexB_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexD(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexD_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexF(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexF_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexI(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexI_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexL(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexL_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexS(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexS_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexUB(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexUB_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexUI(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexUI_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexUL(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexUL_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
+#define astConvexUS(value,oper,array,lbnd,ubnd,starpix) astINVOKE(O, astConvexUS_(value,oper,array,lbnd,ubnd,starpix,STATUS_PTR))
 /* prism. */
 /* ====== */
+
 #define STATUS_PTR astGetStatusPtr
 
 typedef struct AstPrism {
@@ -3223,6 +3333,7 @@ AstPrism *astPrismId_( void *, void *, const char *, ... )__attribute__((format(
 #define astPrism astINVOKE(F,astPrismId_)
 /* stc. */
 /* ==== */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__STCNAME "Name"
@@ -3253,6 +3364,7 @@ int astGetStcNCoord_( AstStc *, int * );
 #define astGetStcNCoord(this) astINVOKE(V,astGetStcNCoord_(astCheckStc(this),STATUS_PTR))
 /* stcresourceprofile. */
 /* =================== */
+
 typedef struct AstStcResourceProfile {
 
    AstStc stc;
@@ -3270,6 +3382,7 @@ AstStcResourceProfile *astStcResourceProfileId_( void *, int, AstKeyMap **, cons
 #define astStcResourceProfile astINVOKE(F,astStcResourceProfileId_)
 /* stcsearchlocation. */
 /* ================== */
+
 typedef struct AstStcSearchLocation {
 
    AstStc stc;
@@ -3287,6 +3400,7 @@ AstStcSearchLocation *astStcSearchLocationId_( void *, int, AstKeyMap **, const 
 #define astStcSearchLocation astINVOKE(F,astStcSearchLocationId_)
 /* stccatalogentrylocation. */
 /* ======================== */
+
 typedef struct AstStcCatalogEntryLocation {
 
    AstStc stc;
@@ -3304,6 +3418,7 @@ AstStcCatalogEntryLocation *astStcCatalogEntryLocationId_( void *, int, AstKeyMa
 #define astStcCatalogEntryLocation astINVOKE(F,astStcCatalogEntryLocationId_)
 /* stcobsdatalocation. */
 /* =================== */
+
 typedef struct AstStcObsDataLocation {
 
    AstStc stc;
@@ -3323,12 +3438,16 @@ AstStcObsDataLocation *astStcObsDataLocationId_( void *, int, AstKeyMap **, cons
 #define astStcObsDataLocation astINVOKE(F,astStcObsDataLocationId_)
 /* timeframe. */
 /* ========== */
+
 /* channel. */
 /* ======== */
+
 /* fitschan. */
 /* ========= */
+
 /* stcschan. */
 /* ========= */
+
 #define STATUS_PTR astGetStatusPtr
 
 #define AST__STCSCHAN_GETATTRIB_BUFF_LEN 200

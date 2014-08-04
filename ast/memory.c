@@ -20,20 +20,20 @@
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -147,6 +147,11 @@
 *        not free any memory.
 *     21-NOV-2011 (DSB):
 *        Correct matchend value returned by astChrSplitRE.
+*     6-JAN-2014 (DSB):
+*        Optimise access to cache to avoid valgrind warnings.
+*     16-JAN-2014 (DSB):
+*        Dump details of all active memory blocks if the total memory allocation
+*        specified by astMemoryWarning is exceeded.
 */
 
 /* Configuration results. */
@@ -2002,6 +2007,10 @@ void *astFreeDouble_( void *ptr, int *status ) {
 *     the supplied pointer is a pointer to an array of pointers. Each
 *     of these pointers is first freed, and then the supplied pointer
 *     is freed.
+*
+*     Note, this routine should not be used with arrays allocated
+*     by astGrow since astGrow over-allocates and so there may be
+*     non-initialised pointers at the end of the array.
 
 *  Parameters:
 *     ptr
@@ -2302,8 +2311,8 @@ void *astMalloc_( size_t size, int init, int *status ) {
 
 /* If the cache is being used and a cached memory block of the required size
    is available, remove it from the cache array and use it. */
-      mem = ( size <= MXCSIZE ) ? cache[ size ] : NULL;
-      if( use_cache && mem ) {
+      mem = ( use_cache && size <= MXCSIZE ) ? cache[ size ] : NULL;
+      if( mem ) {
          cache[ size ] = mem->next;
          mem->next = NULL;
          mem->size = (size_t) size;
@@ -4157,7 +4166,9 @@ void astActiveMemory_( const char *label ) {
    next = Active_List;
    if( next ) {
       while( next ) {
-         if( !next->perm ) printf( "%d ", next->id );
+         if( !next->perm ) {
+            printf( "%d(%s:%d) ", next->id, next->file, next->line );
+         }
          next = next->next;
       }
    } else {
@@ -4236,7 +4247,7 @@ int astMemoryId_( const void *ptr, int *status ){
 
 *-
 */
-   astDECLARE_GLOBALS;
+   astDECLARE_GLOBALS
    astGET_GLOBALS(NULL);
    return ptr ? ((Memory *)(ptr-SIZEOF_MEMORY))->id : -1;
 }
@@ -4435,7 +4446,7 @@ void astMemoryUse_( const void *ptr, const char *verb, int *status ){
 *-
 */
 
-   astDECLARE_GLOBALS;
+   astDECLARE_GLOBALS
    astGET_GLOBALS(NULL);
 
    if( ptr && astMemoryId( ptr ) == Watched_ID ) {
@@ -4781,7 +4792,7 @@ static void Issue( Memory *mem, int *status ) {
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;
+   astDECLARE_GLOBALS
 
 /* Return if no pointer was supplied. */
    if( !mem ) return;
@@ -4793,6 +4804,16 @@ static void Issue( Memory *mem, int *status ) {
    non-zero, a new identifier is used each time the pointer becomes active
    (i.e. each time it is remove from the cache or malloced). */
    if( !Keep_ID || mem->id < 0 ) mem->id = ++Next_ID;
+
+/* Record the file name and line number where it was issued. */
+   if( AST__GLOBALS && AST__GLOBALS->Error.Current_File ) {
+      strncpy( mem->file, AST__GLOBALS->Error.Current_File, sizeof(mem->file) );
+      mem->file[ sizeof(mem->file) - 1 ] = 0;
+      mem->line = AST__GLOBALS->Error.Current_Line;
+   } else {
+      mem->file[ 0 ] = 0;
+      mem->line = 0;
+   }
 
 /* Indicate if this is a permanent memory block (i.e. it will usually not
    be freed by AST). */
@@ -4817,9 +4838,32 @@ static void Issue( Memory *mem, int *status ) {
    debugger breakpoint to be set. */
    if( Current_Usage > Warn_Usage &&
        Warn_Usage > 0 ) {
-      printf( "Warning - AST memory allocation has exceeded %ld bytes\n",
+      printf( "Warning - AST memory allocation has exceeded %ld bytes - "
+              "dumping catalogue of active memory blocks to file 'memory.dump'\n",
               Warn_Usage );
-      astMemoryWarning( 0 );
+
+/* Create a file holding the details of all currently active memory blocks. It can be
+   examined using topcat. */
+      FILE *fd = fopen( "memory.dump", "w" );
+      if( fd ) {
+         Memory *next;
+
+         fprintf( fd, "# id size perm file line\n");
+         next = Active_List;
+         if( next ) {
+            while( next ) {
+               if( !next->perm ) {
+                  fprintf( fd, "%d %zu %d %s %d\n", next->id, next->size,
+                           next->perm, next->file, next->line );
+               }
+               next = next->next;
+            }
+         }
+
+         fclose(fd );
+      }
+
+      Warn_Usage  = 0;
    }
 
    UNLOCK_DEBUG_MUTEX;
@@ -4852,7 +4896,7 @@ static void DeIssue( Memory *mem, int *status ) {
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;
+   astDECLARE_GLOBALS
    Memory *next;
    Memory *prev;
 

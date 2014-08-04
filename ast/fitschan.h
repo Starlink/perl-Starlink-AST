@@ -62,20 +62,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
 *
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
 *
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: D.S. Berry (Starlink)
@@ -180,6 +180,7 @@ typedef struct AstFitsChan {
    int iwc;         /* Include an IWC Frame? */
    int clean;       /* Remove used cards even if an error occurs? */
    int fitsdigits;  /* No. of decmial places in formatted floating point keyword values */
+   char *fitsaxisorder; /* Pointer to a string defining WCS axis order */
    char *warnings;  /* Pointer to a string containing warning conditions */
    void *card;      /* Pointer to next FitsCard to be read */
    void *head;      /* Pointer to first FitsCard in the circular linked list */
@@ -240,6 +241,7 @@ typedef struct AstFitsChanVtab {
    void (* ReadFits)( AstFitsChan *, int * );
    void (* WriteFits)( AstFitsChan *, int * );
    void (* EmptyFits)( AstFitsChan *, int * );
+   void (* ShowFits)( AstFitsChan *, int * );
    void (* PurgeWCS)( AstFitsChan *, int * );
    void (* PutCards)( AstFitsChan *, const char *, int * );
    void (* PutFits)( AstFitsChan *, const char [81], int, int * );
@@ -268,6 +270,11 @@ typedef struct AstFitsChanVtab {
    void (* SetFitsDigits)( AstFitsChan *, int, int * );
    void (* ClearFitsDigits)( AstFitsChan *, int * );
 
+   const char *(* GetFitsAxisOrder)( AstFitsChan *, int * );
+   int (* TestFitsAxisOrder)( AstFitsChan *, int * );
+   void (* SetFitsAxisOrder)( AstFitsChan *, const char *, int * );
+   void (* ClearFitsAxisOrder)( AstFitsChan *, int * );
+
    int (* GetDefB1950)( AstFitsChan *, int * );
    int (* TestDefB1950)( AstFitsChan *, int * );
    void (* SetDefB1950)( AstFitsChan *, int, int * );
@@ -286,6 +293,8 @@ typedef struct AstFitsChanVtab {
    int (* GetNcard)( AstFitsChan *, int * );
 
    int (* GetCardType)( AstFitsChan *, int * );
+   const char *(* GetCardName)( AstFitsChan *, int * );
+   const char *(* GetCardComm)( AstFitsChan *, int * );
 
    int (* GetNkey)( AstFitsChan *, int * );
 
@@ -433,6 +442,7 @@ void astInitFitsChanGlobals_( AstFitsChanGlobals * );
    void astReadFits_( AstFitsChan *, int * );
    void astWriteFits_( AstFitsChan *, int * );
    void astEmptyFits_( AstFitsChan *, int * );
+   void astShowFits_( AstFitsChan *, int * );
    void astPurgeWCS_( AstFitsChan *, int * );
    void astPutCards_( AstFitsChan *, const char *, int * );
    void astPutFits_( AstFitsChan *, const char [81], int, int * );
@@ -519,6 +529,11 @@ void astInitFitsChanGlobals_( AstFitsChanGlobals * );
    void astSetFitsDigits_( AstFitsChan *, int, int * );
    void astClearFitsDigits_( AstFitsChan *, int * );
 
+   const char *astGetFitsAxisOrder_( AstFitsChan *, int * );
+   int astTestFitsAxisOrder_( AstFitsChan *, int * );
+   void astSetFitsAxisOrder_( AstFitsChan *, const char *, int * );
+   void astClearFitsAxisOrder_( AstFitsChan *, int * );
+
    const char *astGetAllWarnings_( AstFitsChan *, int * );
 
    const char *astGetWarnings_( AstFitsChan *, int * );
@@ -529,6 +544,8 @@ void astInitFitsChanGlobals_( AstFitsChanGlobals * );
    int astGetNcard_( AstFitsChan *, int * );
 
    int astGetCardType_( AstFitsChan *, int * );
+   const char *astGetCardName_( AstFitsChan *, int * );
+   const char *astGetCardComm_( AstFitsChan *, int * );
 
    int astGetNkey_( AstFitsChan *, int * );
 
@@ -689,6 +706,9 @@ astINVOKE(V,astWriteFits_(astCheckFitsChan(this),STATUS_PTR))
 #define astEmptyFits(this) \
 astINVOKE(V,astEmptyFits_(astCheckFitsChan(this),STATUS_PTR))
 
+#define astShowFits(this) \
+astINVOKE(V,astShowFits_(astCheckFitsChan(this),STATUS_PTR))
+
 #define astTableSource(this,tabsource) \
 astINVOKE(V,astTableSource_(astCheckFitsChan(this),tabsource,STATUS_PTR))
 
@@ -787,6 +807,15 @@ astINVOKE(V,astSetFitsDigits_(astCheckFitsChan(this),fitsdigits,STATUS_PTR))
 #define astTestFitsDigits(this) \
 astINVOKE(V,astTestFitsDigits_(astCheckFitsChan(this),STATUS_PTR))
 
+#define astClearFitsAxisOrder(this) \
+astINVOKE(V,astClearFitsAxisOrder_(astCheckFitsChan(this),STATUS_PTR))
+#define astGetFitsAxisOrder(this) \
+astINVOKE(V,astGetFitsAxisOrder_(astCheckFitsChan(this),STATUS_PTR))
+#define astSetFitsAxisOrder(this,fitsaxisorder) \
+astINVOKE(V,astSetFitsAxisOrder_(astCheckFitsChan(this),fitsaxisorder,STATUS_PTR))
+#define astTestFitsAxisOrder(this) \
+astINVOKE(V,astTestFitsAxisOrder_(astCheckFitsChan(this),STATUS_PTR))
+
 #define astClearWarnings(this) \
 astINVOKE(V,astClearWarnings_(astCheckFitsChan(this),STATUS_PTR))
 #define astGetWarnings(this) \
@@ -801,6 +830,12 @@ astINVOKE(V,astGetAllWarnings_(astCheckFitsChan(this),STATUS_PTR))
 
 #define astGetCardType(this) \
 astINVOKE(V,astGetCardType_(astCheckFitsChan(this),STATUS_PTR))
+
+#define astGetCardName(this) \
+astINVOKE(V,astGetCardName_(astCheckFitsChan(this),STATUS_PTR))
+
+#define astGetCardComm(this) \
+astINVOKE(V,astGetCardComm_(astCheckFitsChan(this),STATUS_PTR))
 
 #define astGetNcard(this) \
 astINVOKE(V,astGetNcard_(astCheckFitsChan(this),STATUS_PTR))

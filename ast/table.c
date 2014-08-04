@@ -97,20 +97,20 @@ f     - AST_REMOVEROW: Remove a row from a Table
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -120,6 +120,8 @@ f     - AST_REMOVEROW: Remove a row from a Table
 *        Original version.
 *     13-MAY-2011 (DSB):
 *        Added support for table parameters.
+*     16-NOV-2013 (DSB):
+*        Fix bug in forming keys in GetColumnLenC.
 *class--
 */
 
@@ -1360,7 +1362,7 @@ static int GetColumnLenC( AstTable *this, const char *column, int *status ) {
       for( irow = 1; irow <= nrow; irow++ ) {
 
 /* Format the cell name. */
-         sprintf( key, "%s(%d)", column, irow );
+         sprintf( key, "%.*s(%d)", (int) astChrLen(column), column, irow );
 
 /* Get the maximum length needed to format a string in the current
    row/column. */
@@ -4177,7 +4179,6 @@ static int TestAttrib( AstObject *this_object, const char *attrib, int *status )
 */
 
 /* Local Variables: */
-   AstTable *this;               /* Pointer to the Table structure */
    int len;                      /* Length of attribute string */
    int nc;                       /* Number of characters read by astSscanf */
    int result;                   /* Result value to return */
@@ -4187,9 +4188,6 @@ static int TestAttrib( AstObject *this_object, const char *attrib, int *status )
 
 /* Check the global error status. */
    if ( !astOK ) return result;
-
-/* Obtain a pointer to the Table structure. */
-   this = (AstTable *) this_object;
 
 /* Get the length of the attribute string. */
    len = strlen( attrib );

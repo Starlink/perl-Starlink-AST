@@ -30,17 +30,17 @@
 *        J2000.0 FK5 parallax (arcsec)
 *     v2000 = double (Given)
 *         J2000.0 FK5 radial velocity (km/s, +ve = moving away)
-*     r2000 = double * (Returned)
+*     r1950 = double * (Returned)
 *        B1950.0 FK4 RA (radians).
-*     d2000 = double * (Returned)
+*     d1950 = double * (Returned)
 *        B1950.0 FK4 Dec (radians).
-*     dr2000 = double * (Returned)
+*     dr1950 = double * (Returned)
 *        B1950.0 FK4 RA proper motion (rad/Jul.yr)
-*     dd2000 = double * (Returned)
+*     dd1950 = double * (Returned)
 *        B1950.0 FK4 Dec proper motion (rad/Jul.yr)
-*     p2000 = double * (Returned)
+*     p1950 = double * (Returned)
 *        B1950.0 FK4 parallax (arcsec)
-*     v2000 = double * (Returned)q
+*     v1950 = double * (Returned)
 *         B1950.0 FK4 radial velocity (km/s, +ve = moving away)
 
 *  Description:
@@ -80,13 +80,13 @@
 *     century in proper motion.
 *
 *  References:
-*     1  - Smith, C.A. et al, 1989.  "The transformation of astrometric
-*        catalog systems to the equinox J2000.0".  Astron.J. 97, 265.
-*     2  - Yallop, B.D. et al, 1989.  "Transformation of mean star places
-*        from FK4 B1950.0 to FK5 J2000.0 using matrices in 6-space".
-*        Astron.J. 97, 274.
-*     3  - Seidelmann, P.K. (ed), 1992.  "Explanatory Supplement to
-*        the Astronomical Almanac", ISBN 0-935702-68-7.
+*     - Smith, C.A. et al, 1989.  "The transformation of astrometric
+*       catalog systems to the equinox J2000.0".  Astron.J. 97, 265.
+*     - Yallop, B.D. et al, 1989.  "Transformation of mean star places
+*       from FK4 B1950.0 to FK5 J2000.0 using matrices in 6-space".
+*       Astron.J. 97, 274.
+*     - Seidelmann, P.K. (ed), 1992.  "Explanatory Supplement to
+*       the Astronomical Almanac", ISBN 0-935702-68-7.
 
 *  Authors:
 *     PTW: Pat Wallace (STFC)
@@ -96,27 +96,29 @@
 *  History:
 *     2012-02-13 (DSB):
 *        Initial version with documentation taken from Fortran SLA
+*        Adapted with permission from the Fortran SLALIB library.
 *     {enter_further_changes_here}
 
 *  Copyright:
+*     Copyright (C) 1995 Rutherford Appleton Laboratory
 *     Copyright (C) 2012 Science and Technology Facilities Council.
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public License as
-*     published by the Free Software Foundation; either version 3 of
-*     the License, or (at your option) any later version.
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
 *
-*     This program is distributed in the hope that it will be
-*     useful, but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public License for more details.
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
 *
-*     You should have received a copy of the GNU General Public License
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
-*     USA.
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Bugs:
 *     {note_any_bugs_here}

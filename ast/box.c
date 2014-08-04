@@ -40,20 +40,20 @@ f     The Box class does not define any new routines beyond those
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -91,6 +91,18 @@ f     The Box class does not define any new routines beyond those
 *        Do not assume the first axis value is good in function BestBox.
 *     22-MAR-2011 (DSB):
 *        Improve uniformity of points within grid produced by astRegBaseGrid.
+*     16-JUL-2013 (DSB):
+*        Use a more robust algorithm for determining the order of the
+*        vertices whan a Box is simplified to a Polygon. The old method
+*        sometimes resulted in an unbounded "inside-out" polygon.
+*     4-NOV-2013 (DSB):
+*        Modify RegPins so that it can handle uncertainty regions that straddle
+*        a discontinuity. Previously, such uncertainty Regions could have a huge
+*        bounding box resulting in matching region being far too big.
+*     10-APR-2014 (DSB):
+*        More work (in function Cache() ) on handling uncertainty regions that straddle
+*        a discontinuity. This time ensure that the extent of the box on each axis takes 
+*        account of the possibly cyclic nature of the base Frame.
 *class--
 */
 
@@ -743,16 +755,18 @@ static void Cache( AstBox *this, int lohi, int *status ){
 /* Calculate the geodesic half-dimensions of the box. */
       frm = astGetFrame( ((AstRegion *) this)->frameset, AST__BASE );
       GeoLengths( frm, nc, centre, hi, geolen, status );
-      frm = astAnnul( frm );
 
 /* Calculate the half-width and store in the above array. Also store the
    shrunk half-widths, and the shrunk lower and upper bounds. */
       for( i = 0; i < nc; i++ ) {
-         extent[ i ] = fabs( ptr[ i ][ 1 ] - centre[ i ] );
+         extent[ i ] = fabs( astAxDistance( frm, i + 1, ptr[ i ][ 1 ],
+                                            centre[ i ] ) );
          shextent[ i ] = extent[ i ]*this->shrink;
          lo[ i ] = centre[ i ] - shextent[ i ];
          hi[ i ] = centre[ i ] + shextent[ i ];
       }
+
+      frm = astAnnul( frm );
 
 /* Store the pointers to these arrays in the Box structure, and indicate
    the information is usable. */
@@ -3008,6 +3022,7 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
    AstRegion *tunc;             /* Uncertainity Region from "this" */
    double **ptr;                /* Pointer to axis values in "ps2" */
    double *large;               /* A corner position in the larger Box */
+   double *safe;                /* An interior point in "this" */
    double *lbnd_tunc;           /* Lower bounds of "this" uncertainty Region */
    double *lbnd_unc;            /* Lower bounds of supplied uncertainty Region */
    double *p;                   /* Pointer to next axis value */
@@ -3054,18 +3069,28 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
                 astGetNaxes( unc ), nc );
    }
 
+/* Get the centre of the region in the base Frame. We use this as a "safe"
+   interior point within the region. */
+   safe = astRegCentre( this, NULL, NULL, 0, AST__BASE );
+
 /* We now find the maximum distance on each axis that a point can be from the
    boundary of the Box for it still to be considered to be on the boundary.
    First get the Region which defines the uncertainty within the Box being
-   checked (in its base Frame), and get its bounding box. */
+   checked (in its base Frame), re-centre it on the interior point found
+   above (to avoid problems if the uncertainty region straddles a
+   discontinuity), and get its bounding box. */
    tunc = astGetUncFrm( this, AST__BASE );
+   if( safe ) astRegCentre( tunc, safe, NULL, 0, AST__CURRENT );
    lbnd_tunc = astMalloc( sizeof( double )*(size_t) nc );
    ubnd_tunc = astMalloc( sizeof( double )*(size_t) nc );
    astGetRegionBounds( tunc, lbnd_tunc, ubnd_tunc );
 
-/* Also get the Region which defines the uncertainty of the supplied points
-   and get its bounding box. */
+/* Also get the Region which defines the uncertainty of the supplied
+   points and get its bounding box. First re-centre the uncertainty at the
+   interior position to avoid problems from uncertainties that straddle a
+   discontinuity. */
    if( unc ) {
+      if( safe ) astRegCentre( unc, safe, NULL, 0, AST__CURRENT );
       lbnd_unc = astMalloc( sizeof( double )*(size_t) nc );
       ubnd_unc = astMalloc( sizeof( double )*(size_t) nc );
       astGetRegionBounds( unc, lbnd_unc, ubnd_unc );
@@ -3074,8 +3099,9 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
       ubnd_unc = NULL;
    }
 
-/* The required border width for each axis is half of the total width of
-   the two bounding boxes. Use a zero sized box "unc" if no box was supplied. */
+/* The required border width for each axis is half of the total width
+   of the two bounding boxes. Use a zero sized box "unc" if no box was
+   supplied. */
    wid = astMalloc( sizeof( double )*(size_t) nc );
    large = astMalloc( sizeof( double )*(size_t) nc );
    small = astMalloc( sizeof( double )*(size_t) nc );
@@ -3180,6 +3206,7 @@ static int RegPins( AstRegion *this_region, AstPointSet *pset, AstRegion *unc,
    wid = astFree( wid );
    large = astFree( large );
    small = astFree( small );
+   safe = astFree( safe );
 
 /* If an error has occurred, return zero. */
    if( !astOK ) {
@@ -3705,10 +3732,6 @@ static AstMapping *Simplify( AstMapping *this_mapping, int *status ) {
    double corners[8];            /* Box corners in current Frame */
    double k;                     /* Axis constant value */
    double lb;                    /* Lower axis bound */
-   double rxx;                   /* Element of the Jacobian matrix */
-   double rxy;                   /* Element of the Jacobian matrix */
-   double ryx;                   /* Element of the Jacobian matrix */
-   double ryy;                   /* Element of the Jacobian matrix */
    double ub;                    /* Upper axis bound */
    int *inperm;                  /* Input axis permutation array */
    int *outperm;                 /* Output axis permutation array */
@@ -3721,8 +3744,6 @@ static AstMapping *Simplify( AstMapping *this_mapping, int *status ) {
    int neg;                      /* Was original Region negated? */
    int nin;                      /* No. of base Frame axes (Mapping inputs) */
    int nout;                     /* No. of current Frame axes (Mapping outputs) */
-   int olddir0;                  /* Original value of Direction(1) attribute */
-   int olddir1;                  /* Original value of Direction(2) attribute */
    int simpler;                  /* Has some simplication taken place? */
 
 /* Initialise. */
@@ -3962,89 +3983,61 @@ static AstMapping *Simplify( AstMapping *this_mapping, int *status ) {
             box = (AstBox *) new;
             Cache( box, 0, status );
 
-/* For a "normal" right handed coordinate system, rotation from the positive
-   first axis to the positive second axis is anti-clockwise. But for left
-   handed coordinate systems, it's the opposite. Determine if the required
-   system is left or right handed by looking at the default values for
-   the Direction attribute. If the default values are equal, then the
-   system is right handed - otherwise it is left handed. We need to clear
-   any set Direction value first in order to get the default value, but
-   take care to re-instate any set Direction values afterwards. */
-            if( astTestDirection( frm, 0 )  ) {
-               olddir0 = astGetDirection( frm, 0 ) ? 1 : 0;
-               astClearDirection( frm, 0 );
-            } else {
-               olddir0 = -1;
-            }
-
-            if( astTestDirection( frm, 1 )  ) {
-               olddir1 = astGetDirection( frm, 1 ) ? 1 : 0;
-               astClearDirection( frm, 1 );
-            } else {
-               olddir1 = -1;
-            }
-
-            right_handed = ( astGetDirection( frm, 0 ) == astGetDirection( frm, 1 ) );
-
-            if( olddir0 != - 1 ) astSetDirection( frm, 0, olddir0 );
-            if( olddir1 != - 1 ) astSetDirection( frm, 1, olddir1 );
-
-/* The Mapping may change the handedness of the axes. That is, the
-   Mapping may reverse one axis without reversing the other. This will be
-   the case if the determinant of the Jacobian matrix of the Mapping is
-   negative. Get the determinant. If it is negative, reverse the
-   handedness of the axes. */
-            rxx = astRate( map, box->centre, 0, 0 );
-            rxy = astRate( map, box->centre, 0, 1 );
-            ryx = astRate( map, box->centre, 1, 0 );
-            ryy = astRate( map, box->centre, 1, 1 );
-            if( rxx*ryy - rxy*ryx < 0 ) right_handed = ! right_handed;
-
 /* The order in which the polygon vertices are stored determines whether
    the interior or exterior of the polygon forms the inside of the
-   Region. We want the inside to be the interior so we must store the
-   vertices in anti-clockwise order within the new coordinate Frame. Do
-   right handed systems first. */
-            if( right_handed ) {
-               ptr1[ 0 ][ 0 ] = box->centre[ 0 ] - box->extent[ 0 ];
-               ptr1[ 1 ][ 0 ] = box->centre[ 1 ] + box->extent[ 1 ];
+   Region. We want the inside to be the interior. First create a Polygon
+   in which the vertices are stored in clockwise order within the
+   new coordinate Frame. If the new Polygon is not bounded, use
+   anti-clockwise order. */
+            for( right_handed = 0; right_handed < 2; right_handed++ ) {
 
-               ptr1[ 0 ][ 1 ] = box->centre[ 0 ] - box->extent[ 0 ];
-               ptr1[ 1 ][ 1 ] = box->centre[ 1 ] - box->extent[ 1 ];
+               if( right_handed ) {
+                  ptr1[ 0 ][ 0 ] = box->centre[ 0 ] - box->extent[ 0 ];
+                  ptr1[ 1 ][ 0 ] = box->centre[ 1 ] + box->extent[ 1 ];
 
-               ptr1[ 0 ][ 2 ] = box->centre[ 0 ] + box->extent[ 0 ];
-               ptr1[ 1 ][ 2 ] = box->centre[ 1 ] - box->extent[ 1 ];
+                  ptr1[ 0 ][ 1 ] = box->centre[ 0 ] - box->extent[ 0 ];
+                  ptr1[ 1 ][ 1 ] = box->centre[ 1 ] - box->extent[ 1 ];
 
-               ptr1[ 0 ][ 3 ] = box->centre[ 0 ] + box->extent[ 0 ];
-               ptr1[ 1 ][ 3 ] = box->centre[ 1 ] + box->extent[ 1 ];
+                  ptr1[ 0 ][ 2 ] = box->centre[ 0 ] + box->extent[ 0 ];
+                  ptr1[ 1 ][ 2 ] = box->centre[ 1 ] - box->extent[ 1 ];
 
-/* For left handed systems, "anti-clockwise" implies the opposite order */
-            } else {
-               ptr1[ 0 ][ 3 ] = box->centre[ 0 ] - box->extent[ 0 ];
-               ptr1[ 1 ][ 3 ] = box->centre[ 1 ] + box->extent[ 1 ];
+                  ptr1[ 0 ][ 3 ] = box->centre[ 0 ] + box->extent[ 0 ];
+                  ptr1[ 1 ][ 3 ] = box->centre[ 1 ] + box->extent[ 1 ];
 
-               ptr1[ 0 ][ 2 ] = box->centre[ 0 ] - box->extent[ 0 ];
-               ptr1[ 1 ][ 2 ] = box->centre[ 1 ] - box->extent[ 1 ];
+               } else {
+                  ptr1[ 0 ][ 3 ] = box->centre[ 0 ] - box->extent[ 0 ];
+                  ptr1[ 1 ][ 3 ] = box->centre[ 1 ] + box->extent[ 1 ];
 
-               ptr1[ 0 ][ 1 ] = box->centre[ 0 ] + box->extent[ 0 ];
-               ptr1[ 1 ][ 1 ] = box->centre[ 1 ] - box->extent[ 1 ];
+                  ptr1[ 0 ][ 2 ] = box->centre[ 0 ] - box->extent[ 0 ];
+                  ptr1[ 1 ][ 2 ] = box->centre[ 1 ] - box->extent[ 1 ];
 
-               ptr1[ 0 ][ 0 ] = box->centre[ 0 ] + box->extent[ 0 ];
-               ptr1[ 1 ][ 0 ] = box->centre[ 1 ] + box->extent[ 1 ];
-            }
-         }
+                  ptr1[ 0 ][ 1 ] = box->centre[ 0 ] + box->extent[ 0 ];
+                  ptr1[ 1 ][ 1 ] = box->centre[ 1 ] - box->extent[ 1 ];
+
+                  ptr1[ 0 ][ 0 ] = box->centre[ 0 ] + box->extent[ 0 ];
+                  ptr1[ 1 ][ 0 ] = box->centre[ 1 ] + box->extent[ 1 ];
+               }
 
 /* Transform the Box corners into the current Frame. */
-         ps2 = astTransform( map, ps1, 1, NULL );
-         ptr2 = astGetPoints( ps2 );
-         if( astOK ) {
+               ps2 = astTransform( map, ps1, 1, NULL );
+               ptr2 = astGetPoints( ps2 );
+               if( astOK ) {
 
 /* Create a Polygon from these points. */
-            for( ic = 0; ic < 4; ic++ ) {
-               corners[ ic ] = ptr2[ 0 ][ ic ];
-               corners[ 4 + ic ] = ptr2[ 1 ][ ic ];
+                  for( ic = 0; ic < 4; ic++ ) {
+                     corners[ ic ] = ptr2[ 0 ][ ic ];
+                     corners[ 4 + ic ] = ptr2[ 1 ][ ic ];
+                  }
+                  newpoly = astPolygon( frm, 4, 4, corners, unc, "", status );
+
+/* If the Polygon is bounded, break out of the loop. */
+                  if( astGetBounded( newpoly ) ) break;
+               }
+
+/* Free resources. */
+               newpoly = astAnnul( newpoly );
+               ps2 = astAnnul( ps2 );
             }
-            newpoly = astPolygon( frm, 4, 4, corners, unc, "", status );
 
 /* See if all points within the Box mesh fall on the boundary of this
    Polygon, to within the uncertainty of the Region. */

@@ -200,6 +200,8 @@
 *           An integer identifier for the FITS TSC projection
 *        AST__HPX
 *           An integer identifier for the FITS HPX projection.
+*        AST__XPH
+*           An integer identifier for the FITS XPH projection.
 *        AST__TPN
 *           An integer identifier for a "TAN with correction terms" projection.
 *        AST__WCSBAD
@@ -230,20 +232,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
 *
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
 *
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: D.S. Berry (Starlink)
@@ -340,7 +342,8 @@
 #define AST__GLS 28
 #define AST__TPN 29
 #define AST__HPX 30
-#define AST__WCSBAD 31   /* A bad projection type */
+#define AST__XPH 31
+#define AST__WCSBAD 32   /* A bad projection type */
 
 /* Define a dummy __attribute__ macro for use on non-GNU compilers. */
 #ifndef __GNUC__

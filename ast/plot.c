@@ -204,20 +204,20 @@ f     - Title: The Plot title drawn using AST_GRID
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
 *
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
 *
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: D.S. Berry (Starlink)
@@ -700,6 +700,17 @@ f     - Title: The Plot title drawn using AST_GRID
 *     15-OCT-2011 (DSB):
 *        Always check that the grf module implements the scales function
 *        before trying to invoke the scales function.
+*     21-MAY-2012 (DSB):
+*        Correct text strings used to represent the "Labelling" attribute
+*        within dumps of a Plot. Previously they were reversed.
+*     7-JUN-2012 (DSB):
+*        Speed up plotting of CmpRegion boundaries by splitting the
+*        CmpRegion up into a set of disjoint Regions, and plotting each
+*        one separately.
+*     16-JUN-2014 (DSB):
+*        - Prevent seg fault in PlotLabels caused by accessing
+*        uninitialised "atext" field stored within purged labels.
+*        - Choose a label with non-negative priority as the fall-back root label.
 *class--
 */
 
@@ -1686,7 +1697,7 @@ static char *GrfLabels = "Border Curves Title Markers Strings Axis1 Axis2 Axis3 
 static const char *xedge[4] = { "left", "top", "right", "bottom" };
 
 /* Text values used to represent Labelling externally. */
-static const char *xlbling[2] = { "interior", "exterior" };
+static const char *xlbling[2] = { "exterior", "interior" };
 
 /* Define macros for accessing each item of thread specific global data. */
 #ifdef THREAD_SAFE
@@ -15913,7 +15924,7 @@ static const char *GetAttrib( AstObject *this_object, const char *attrib, int *s
    } else if ( !strcmp( attrib, "labelling" ) ) {
       ival = GetUsedLabelling( this, status );
       if ( astOK ) {
-         result = ival ? xlbling[0] : xlbling[1];
+         result = ival ? xlbling[1] : xlbling[0];
       }
 
 /* Edge(axis). */
@@ -23290,6 +23301,7 @@ static void PlotLabels( AstPlot *this, int esc, AstFrame *frame, int axis,
    int nz;                /* Number of trailing zeros in this label */
    int nzmax;             /* Max. number of trailing zeros */
    int odd;               /* DO we have a strange axis? */
+   int off;               /* Offset from central label */
    int olap;              /* Any overlap found? */
    int prio;              /* Current priority */
    int root;              /* Index of unabbreviated label */
@@ -23433,18 +23445,30 @@ static void PlotLabels( AstPlot *this, int esc, AstFrame *frame, int axis,
 
             }
          }
+      }
 
 /* Initialise the abbreviated text to be the same as the full text. */
-         ll->atext = ll->text;
-      }
+      ll->atext = ll->text;
    }
 
 /* If all the labels overlapped labels on a previous axis, arbitrarily
-   use the middle label as the root label (this should never happen but
-   is included to avoid segmentation violations occurring in error
-   conditions such as the txExt function being buggy and cuasing spurious
-   overlaps). */
-   if( root == -1 ) root = nlab/2;
+   use the label with non-genative priority that is closest to the middle
+   as the root label (this should never happen but is included to avoid
+   segmentation violations occurring in error conditions such as the
+   txExt function being buggy and cuasing spurious overlaps). */
+   if( root == -1 ) {
+      for( off = 0; off < (nlab-1)/2; off++ ) {
+         root = nlab/2 + off;
+         if( list[ root ].priority >= 0 ) break;
+         root = nlab/2 - off;
+         if( list[ root ].priority >= 0 ) break;
+      }
+      if( root == -1 ) {
+         astError( AST__PLFMT, "%s(%s): Cannot produce labels for axis %d.",
+                   status, method, class, axis + 1 );
+         root = nlab/2;
+      }
+   }
 
 /* Assign a priority higher than any other priority to the root label. */
    list[ root ].priority = nzmax + 1;
@@ -24301,12 +24325,15 @@ static int RegionOutline( AstPlot *this, AstFrame *frm, const char *method,
 /* Local Variables: */
    AstMapping *map;        /* Mapping with Region masking included */
    AstPlotCurveData cdata; /* Stores information about curve breaks */
+   AstRegion **comps;      /* List of component Regions */
    astDECLARE_GLOBALS      /* Pointer to thread-specific global data */
    double d[ CRV_NPNT ];   /* Offsets to evenly spaced points along curve */
    double tol;             /* Absolute tolerance value */
    double x[ CRV_NPNT ];   /* X coords at evenly spaced points along curve */
    double y[ CRV_NPNT ];   /* Y coords at evenly spaced points along curve */
    int i;                  /* Loop count */
+   int icomp;              /* Index of component Region */
+   int ncomp;              /* Number of component Regions */
    int result;             /* The returned value */
 
 /* Initialise */
@@ -24365,22 +24392,38 @@ static int RegionOutline( AstPlot *this, AstFrame *frm, const char *method,
       Crv_vybrk = cdata.vybrk;
       Crv_clip = astGetClip( this ) & 1;
 
+/* Attempt to split the Region into a set of disjoint component Regions. */
+      comps = astRegSplit( (AstRegion *) frm, &ncomp );
+
+/* Draw each one. */
+      for( icomp = 0; icomp < ncomp; icomp++ ) {
+
+/* A pointer to the Region. */
+         Map5_region = comps[ icomp ];
+
 /* Set up a list of points spread evenly over the curve. */
-      for( i = 0; i < CRV_NPNT; i++ ){
-        d[ i ] = ( (double) i)/( (double) CRV_NSEG );
-      }
+         for( i = 0; i < CRV_NPNT; i++ ){
+           d[ i ] = ( (double) i)/( (double) CRV_NSEG );
+         }
 
 /* Map these points into graphics coordinates. */
-      Map5( CRV_NPNT, d, x, y, method, class, status GLOBALS_NAME );
+         Map5( CRV_NPNT, d, x, y, method, class, status GLOBALS_NAME );
 
 /* Use Crv and Map5 to draw the curve. */
-      Crv( this, d, x, y, 0, NULL, NULL, method, class, status );
+         Crv( this, d, x, y, 0, NULL, NULL, method, class, status );
 
 /* End the current poly line. */
-      Opoly( this, status );
+         Opoly( this, status );
 
 /* Tidy up the static data used by Map5. */
-      Map5( 0, NULL, NULL, NULL, method, class, status GLOBALS_NAME );
+         Map5( 0, NULL, NULL, NULL, method, class, status GLOBALS_NAME );
+
+/* Annul the component Region pointer. */
+         comps[ icomp ] = astAnnul( Map5_region );
+      }
+
+/* Free the memory holding the list of component Region pointers. */
+      comps = astFree( comps );
 
 /* Annul the Mapping. */
       Map5_map = astAnnul( Map5_map );

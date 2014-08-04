@@ -133,20 +133,20 @@ f     The StcsChan class does not define any new routines beyond those
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
 *
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
 *
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David Berry (Starlink)
@@ -158,6 +158,9 @@ f     The StcsChan class does not define any new routines beyond those
 *        Retain default Equinox values in SkyFrame when reading an STC-S.
 *     30-OCT-2009 (DSB):
 *        Make case insensitive (except for units strings).
+*     21-FEB-2014 (DSB):
+*        Split long properties up into words when writing out an STC-S
+*        description.
 *class--
 */
 
@@ -397,10 +400,8 @@ static char *AddItem( AstStcsChan *this, AstKeyMap *km, const char *key,
 *     StcsChan member function
 
 *  Description:
-*     This function creates a new Box with dimensions specified by the
-*     values in the "error" array, centred on a representative position
-*     within one of the supplied Regions, and then stores the Box as the
-*     uncertainty Region within both the supplied Regions.
+*     This function appends text describing a singlke STC-S property to
+*     a supplied text buffer, handling the splitting of text into lines.
 
 *  Parameters:
 *     this
@@ -436,8 +437,12 @@ static char *AddItem( AstStcsChan *this, AstKeyMap *km, const char *key,
 
 /* Local Variables: */
    char *result;          /* Returned pointer */
-   const char *word;      /* Property value */
+   char **words;          /* All words */
+   const char *text;      /* Property value */
+   const char *word;      /* Single word */
+   int iw;                /* Word index */
    int len;               /* Length of new text */
+   int nw;                /* Number of words in property */
 
 /* Initialise */
    result = line;
@@ -447,36 +452,61 @@ static char *AddItem( AstStcsChan *this, AstKeyMap *km, const char *key,
    if ( !astOK ) return result;
 
 /* If the KeyMap contains the required property... */
-   if( astMapGet0C( km, key, &word ) ) {
+   if( astMapGet0C( km, key, &text ) ) {
 
-/* If required, get the number of characters to be added to the buffer. */
-      if( linelen ) {
-         len = ( prefix ? strlen( prefix ) : 0 ) + strlen( word );
-
-/* If there is insufficient room left, write out the text through the
-   Channel sink function, and start a new line with three spaces. Then
-   reset the number of character remaining in the line. */
+/* Add any supplied prefix to the returned buffer. */
+      if( prefix ) {
+         len = strlen( prefix );
          if( len > *crem && len < linelen ) {
             astPutNextText( this, result );
             *nc = 0;
             result = astAppendString( result, nc, "   " );
             *crem = linelen - 3;
          }
-
-/* Reduce crem to account for the text that is about to be added to the
-   line. */
+         result = astAppendString( result, nc, prefix );
          *crem -= len;
       }
 
-/* Add any supplied prefix to the returned buffer. */
-      if( prefix ) result = astAppendString( result, nc, prefix );
+/* Split the property into words. */
+      words = astChrSplit( text, &nw );
+
+/* Append each word to the buffer. */
+      for( iw = 0; iw < nw; iw++ ) {
+         word = words[ iw ];
+
+/* If required, get the number of characters to be added to the buffer. */
+         if( linelen ) {
+            len = strlen( word );
+
+/* If there is insufficient room left, write out the text through the
+   Channel sink function, and start a new line with three spaces. Then
+   reset the number of character remaining in the line. */
+            if( len > *crem && len < linelen ) {
+               astPutNextText( this, result );
+               *nc = 0;
+               result = astAppendString( result, nc, "   " );
+               *crem = linelen - 3;
+            }
+
+/* Reduce crem to account for the text that is about to be added to the
+   line. */
+            *crem -= len;
+         }
 
 /* Add the property value to the returned buffer. */
-      result = astAppendString( result, nc, word );
+         result = astAppendString( result, nc, word );
 
-/* Add a traling space to the returned buffer. */
-      if( !linelen || len < *crem ) {
-         result = astAppendString( result, nc, " " );
+/* Add a traling space to the returned buffer, if there is room. */
+         if( !linelen || *crem > 0 ) {
+            result = astAppendString( result, nc, " " );
+            (*crem)--;
+         }
+      }
+
+/* Free the words buffer. */
+      if( words ) {
+         for( iw = 0; iw < nw; iw++ ) words[ iw ] = astFree( words[ iw ] );
+         words = astFree( words );
       }
    }
 
@@ -875,7 +905,7 @@ static const char *GetAttrib( AstObject *this_object, const char *attrib, int *s
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;           /* Declare the thread specific global data */
+   astDECLARE_GLOBALS            /* Declare the thread specific global data */
    AstStcsChan *this;            /* Pointer to the StcsChan structure */
    const char *result;           /* Pointer value to return */
    int ival;                     /* Integer attribute value */
@@ -1619,7 +1649,6 @@ static int GetRegionProps( AstStcsChan *this, AstRegion *spreg,
                (void) sprintf( buf, fmt, scale*centre[ i ] );
                prop = astAppendString( prop, &nc, buf );
                prop = astAppendString( prop, &nc, " " );
-               p += nspace;
 
             } else {
                astAddWarning( this, 1, "The supplied PointList contains "
@@ -1751,7 +1780,7 @@ void astInitStcsChanVtab_(  AstStcsChanVtab *vtab, const char *name, int *status
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;           /* Pointer to thread-specific global data */
+   astDECLARE_GLOBALS            /* Pointer to thread-specific global data */
    AstObjectVtab *object;        /* Pointer to Object component of Vtab */
    AstChannelVtab *channel;      /* Pointer to Channel component of Vtab */
 
@@ -5920,7 +5949,7 @@ static int Write( AstChannel *this_channel, AstObject *object, int *status ) {
    AstRegion *coords;        /* The Region representing the STC Coords */
    AstRegion *new_coords;    /* COORDS Region mapped into frame of AREA */
    AstStcsChan *this;        /* Pointer to the StcsChan structure */
-   astDECLARE_GLOBALS;       /* Declare the thread specific global data */
+   astDECLARE_GLOBALS        /* Declare the thread specific global data */
    const char *class;        /* Pointer to string holding object class */
    const char *errclass;     /* Type of the failed entry */
    const char *errname;      /* Name of the failed entry */
@@ -8031,7 +8060,7 @@ f     pointer.
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;           /* Pointer to thread-specific global data */
+   astDECLARE_GLOBALS            /* Pointer to thread-specific global data */
    AstStcsChan *new;             /* Pointer to new StcsChan */
    va_list args;                 /* Variable argument list */
 
@@ -8113,7 +8142,7 @@ AstStcsChan *astStcsChanId_( const char *(* source)( void ),
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;           /* Pointer to thread-specific global data */
+   astDECLARE_GLOBALS            /* Pointer to thread-specific global data */
    AstStcsChan *new;             /* Pointer to new StcsChan */
    va_list args;                 /* Variable argument list */
 
@@ -8303,8 +8332,8 @@ f     encodings and the internal ASCII encoding. If no such routines
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;           /* Pointer to thread-specific global data */
-   AstStcsChan *new;              /* Pointer to new StcsChan */
+   astDECLARE_GLOBALS            /* Pointer to thread-specific global data */
+   AstStcsChan *new;             /* Pointer to new StcsChan */
    va_list args;                 /* Variable argument list */
    int *status;                  /* Pointer to inherited status value */
 
@@ -8588,7 +8617,7 @@ AstStcsChan *astLoadStcsChan_( void *mem, size_t size,
 */
 
 /* Local Variables: */
-   astDECLARE_GLOBALS;          /* Pointer to thread-specific global data */
+   astDECLARE_GLOBALS           /* Pointer to thread-specific global data */
    AstStcsChan *new;            /* Pointer to the new StcsChan */
 
 /* Initialise. */

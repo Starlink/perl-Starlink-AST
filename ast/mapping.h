@@ -248,20 +248,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -330,6 +330,7 @@
 /* C header files. */
 /* --------------- */
 #include <stddef.h>
+#include <stdint.h>
 
 /* Macros. */
 /* ======= */
@@ -342,7 +343,7 @@
 #define STATUS_PTR astGetStatusPtr
 #endif
 #define AST__MAPPING_GETATTRIB_BUFF_LEN 50
-#define AST__MAPPING_FUNPN_MAX_CACHE  5
+#define AST__MAPPING_RATEFUN_MAX_CACHE  5
 
 /* Resampling flags. */
 /* ----------------- */
@@ -362,6 +363,7 @@
 #define AST__VARWGT (1024)       /* Use input variances as weights? */
 #define AST__NOBAD (2048)        /* Leave bad output values unchanged? */
 #define AST__DISVAR (4096)       /* Generate distribution (not mean) variance? */
+#define AST__NONORM (8192)       /* No normalisation required at end? */
 
 /* These macros identify standard sub-pixel interpolation algorithms
    for use by astResample<X>. They are used by giving the macro's
@@ -442,6 +444,7 @@ typedef struct AstMappingVtab {
    AstMapping *(* Simplify)( AstMapping *, int * );
    AstPointSet *(* Transform)( AstMapping *, AstPointSet *, int, AstPointSet *, int * );
    double (* Rate)( AstMapping *, double *, int, int, int * );
+   int (* DoNotSimplify)( AstMapping *, int * );
    int (* GetInvert)( AstMapping *, int * );
    int (* GetIsSimple)( AstMapping *, int * );
    int (* GetNin)( AstMapping *, int * );
@@ -474,7 +477,7 @@ typedef struct AstMappingVtab {
 #define DECLARE_GENERIC_ALL(X,Xtype) \
    int (* Resample##X)( AstMapping *, int, const int [], const int [], \
                         const Xtype [], const Xtype [], int, \
-                        void (*)(), const double [], int, double, int, \
+                        void (*)( void ), const double [], int, double, int, \
                         Xtype, int, const int [], const int [], \
                         const int [], const int [], Xtype [], Xtype [], int * ); \
 
@@ -506,7 +509,7 @@ DECLARE_GENERIC_ALL(LD,long double)
                          const Xtype [], const Xtype [], int, const double [], \
                          int, double, int, Xtype, int, const int [], \
                          const int [], const int [], const int [], Xtype [], \
-                         Xtype [], double [], int *, int * );
+                         Xtype [], double [], int64_t *, int * );
 
 DECLARE_GENERIC_DFI(D,double)
 DECLARE_GENERIC_DFI(F,float)
@@ -531,10 +534,10 @@ typedef struct AstMappingGlobals {
    char GetAttrib_Buff[ AST__MAPPING_GETATTRIB_BUFF_LEN + 1 ];
    AstMapping *Unsimplified_Mapping;
    int Rate_Disabled;
-   AstPointSet *FunPN_Pset1_Cache[ AST__MAPPING_FUNPN_MAX_CACHE ];
-   AstPointSet *FunPN_Pset2_Cache[ AST__MAPPING_FUNPN_MAX_CACHE ];
-   int FunPN_Next_Slot;
-   int FunPN_Pset_Size[ AST__MAPPING_FUNPN_MAX_CACHE ];
+   AstPointSet *RateFun_Pset1_Cache[ AST__MAPPING_RATEFUN_MAX_CACHE ];
+   AstPointSet *RateFun_Pset2_Cache[ AST__MAPPING_RATEFUN_MAX_CACHE ];
+   int RateFun_Next_Slot;
+   int RateFun_Pset_Size[ AST__MAPPING_RATEFUN_MAX_CACHE ];
 } AstMappingGlobals;
 
 #endif
@@ -573,7 +576,7 @@ void astInitMappingGlobals_( AstMappingGlobals * );
 #define PROTO_GENERIC_ALL(X,Xtype) \
    int astResample##X##_( AstMapping *, int, const int [], const int [], \
                         const Xtype [], const Xtype [], int, \
-                        void (*)(), const double [], int, double, int, \
+                        void (*)( void ), const double [], int, double, int, \
                         Xtype, int, const int [], const int [], \
                         const int [], const int [], Xtype [], Xtype [], int * ); \
 
@@ -605,7 +608,7 @@ PROTO_GENERIC_ALL(LD,long double)
                          const Xtype [], const Xtype [], int, const double [], \
                          int, double, int, Xtype, int, const int [], \
                          const int [], const int [], const int [], Xtype [], \
-                         Xtype [], double [], int *, int * );
+                         Xtype [], double [], int64_t *, int * );
 
 PROTO_GENERIC_DFI(D,double)
 PROTO_GENERIC_DFI(F,float)
@@ -651,6 +654,7 @@ int astGetReport_( AstMapping *, int * );
 int astGetTranForward_( AstMapping *, int * );
 int astGetTranInverse_( AstMapping *, int * );
 int astGetIsLinear_( AstMapping *, int * );
+int astDoNotSimplify_( AstMapping *, int * );
 int astMapMerge_( AstMapping *, int, int, int *, AstMapping ***, int **, int * );
 int astTestInvert_( AstMapping *, int * );
 int astTestReport_( AstMapping *, int * );
@@ -817,6 +821,8 @@ astINVOKE(V,astSetReport_(astCheckMapping(this),value,STATUS_PTR))
 astINVOKE(V,astTestInvert_(astCheckMapping(this),STATUS_PTR))
 #define astTestReport(this) \
 astINVOKE(V,astTestReport_(astCheckMapping(this),STATUS_PTR))
+#define astDoNotSimplify(this) \
+astINVOKE(V,astDoNotSimplify_(astCheckMapping(this),STATUS_PTR))
 
 /* Since a NULL PointSet pointer is acceptable here, we must omit the argument
    checking in that case. (But unfortunately, "out" then gets evaluated

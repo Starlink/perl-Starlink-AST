@@ -47,20 +47,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -127,6 +127,12 @@
 #endif
 
 #if defined(astCLASS)            /* Protected */
+
+/* Define values for the different values of the SkyRefIs attribute. */
+#define AST__BAD_REF 	 0
+#define AST__POLE_REF    1
+#define AST__ORIGIN_REF  2
+#define AST__IGNORED_REF 3
 
 /* Values used to represent different System attribute values. */
 #define AST__FK4           1
@@ -248,10 +254,6 @@ typedef struct AstSkyFrameVtab {
    int (* TestAlignOffset)( AstSkyFrame *, int * );
    void (* ClearAlignOffset)( AstSkyFrame *, int * );
    void (* SetAlignOffset)( AstSkyFrame *, int, int * );
-
-/* Local Apparent Sidereal Time look-up tables. */
-   int nlast_tables;
-   AstSkyLastTable **last_tables;
 
 } AstSkyFrameVtab;
 

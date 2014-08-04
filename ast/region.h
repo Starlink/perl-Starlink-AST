@@ -35,20 +35,20 @@
 *     Research Councils
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (Starlink)
@@ -122,6 +122,7 @@ typedef struct AstRegionVtab {
    int (* OverlapX)( AstRegion *, AstRegion *, int * );
    AstRegion *(* MapRegion)( AstRegion *, AstMapping *, AstFrame *, int * );
    AstFrame *(* GetRegionFrame)( AstRegion *, int * );
+   AstFrameSet *(* GetRegionFrameSet)( AstRegion *, int * );
    AstFrame *(* RegFrame)( AstRegion *, int * );
    AstFrameSet *(* GetRegFS)( AstRegion *, int * );
    AstPointSet *(* RegTransform)( AstRegion *, AstPointSet *, int, AstPointSet *, AstFrame **, int * );
@@ -147,6 +148,7 @@ typedef struct AstRegionVtab {
    AstPointSet *(* RegGrid)( AstRegion *, int * );
    AstPointSet *(* RegBaseMesh)( AstRegion *, int * );
    AstPointSet *(* RegBaseGrid)( AstRegion *, int * );
+   AstRegion **(* RegSplit)( AstRegion *, int *, int * );
    AstPointSet *(* BndBaseMesh)( AstRegion *, double *, double *, int * );
    AstPointSet *(* BndMesh)( AstRegion *, double *, double *, int * );
    AstRegion *(* GetNegation)( AstRegion *, int * );
@@ -249,6 +251,7 @@ void astInitRegionGlobals_( AstRegionGlobals * );
 /* -------------------------------- */
 
 AstFrame *astGetRegionFrame_( AstRegion *, int * );
+AstFrameSet *astGetRegionFrameSet_( AstRegion *, int * );
 int astOverlap_( AstRegion *, AstRegion *, int * );
 void astNegate_( AstRegion *, int * );
 
@@ -295,6 +298,7 @@ AstPointSet *astRegGrid_( AstRegion *, int * );
 AstPointSet *astRegBaseMesh_( AstRegion *, int * );
 AstPointSet *astRegBaseGrid_( AstRegion *, int * );
 AstPointSet *astBndBaseMesh_( AstRegion *, double *, double *, int * );
+AstRegion **astRegSplit_( AstRegion *, int *, int * );
 AstPointSet *astBndMesh_( AstRegion *, double *, double *, int * );
 AstRegion *astGetUncFrm_( AstRegion *, int, int * );
 AstRegion *astGetDefUnc_( AstRegion *, int * );
@@ -381,6 +385,8 @@ astINVOKE(O,astLoadRegion_(mem,size,vtab,name,astCheckChannel(channel),STATUS_PT
    of object is supplied. */
 #define astGetRegionFrame(this) \
 astINVOKE(O,astGetRegionFrame_(astCheckRegion(this),STATUS_PTR))
+#define astGetRegionFrameSet(this) \
+astINVOKE(O,astGetRegionFrameSet_(astCheckRegion(this),STATUS_PTR))
 #define astNegate(this) \
 astINVOKE(V,astNegate_(astCheckRegion(this),STATUS_PTR))
 #define astOverlap(this,that) \
@@ -439,6 +445,7 @@ astINVOKE(V,astGetRegionPoints_(astCheckRegion(this),maxpoint,maxcoord,npoint,po
 #define astRegBaseMesh(this) astINVOKE(O,astRegBaseMesh_(astCheckRegion(this),STATUS_PTR))
 #define astRegBasePick(this,naxes,axes) astINVOKE(O,astRegBasePick_(astCheckRegion(this),naxes,axes,STATUS_PTR))
 #define astRegBaseGrid(this) astINVOKE(O,astRegBaseGrid_(astCheckRegion(this),STATUS_PTR))
+#define astRegSplit(this,nlist) astINVOKE(V,astRegSplit_(astCheckRegion(this),nlist,STATUS_PTR))
 #define astBndBaseMesh(this,lbnd,ubnd) astINVOKE(O,astBndBaseMesh_(astCheckRegion(this),lbnd,ubnd,STATUS_PTR))
 #define astBndMesh(this,lbnd,ubnd) astINVOKE(O,astBndMesh_(astCheckRegion(this),lbnd,ubnd,STATUS_PTR))
 #define astRegCentre(this,cen,ptr,index,ifrm) astINVOKE(V,astRegCentre_(astCheckRegion(this),cen,ptr,index,ifrm,STATUS_PTR))

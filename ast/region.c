@@ -111,6 +111,8 @@ c     - astGetRegionBounds: Get the bounds of a Region
 f     - AST_GETREGIONBOUNDS: Get the bounds of a Region
 c     - astGetRegionFrame: Get a copy of the Frame represent by a Region
 f     - AST_GETREGIONFRAME: Get a copy of the Frame represent by a Region
+f     - astGetRegionFrameSet: Get a copy of the Frameset encapsulated by a Region
+f     - AST_GETREGIONFRAMESET: Get a copy of the Frameset encapsulated by a Region
 c     - astGetRegionMesh: Get a mesh of points covering a Region
 f     - AST_GETREGIONMESH: Get a mesh of points covering a Region
 c     - astGetRegionPoints: Get the positions that define a Region
@@ -137,20 +139,20 @@ f     - AST_SHOWMESH: Display a mesh of points on the surface of a Region
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     DSB: David S. Berry (STARLINK)
@@ -203,11 +205,20 @@ f     - AST_SHOWMESH: Display a mesh of points on the surface of a Region
 *        In RegBaseGrid, accept the final try even if it is not within 5%
 *        of the required meshsize.
 *     27-APR-2012 (DSB):
-*        Store a negated copy of itself with each Region. Changing the Negated 
+*        Store a negated copy of itself with each Region. Changing the Negated
 *        attribute of a Region causes the cached information to be reset, and
 *        re-calculating it can be an expensive operation. So instead of changing
 *        "Negatated" in "this", access the negated copy of "this" using the
 *        new protected method astGetNegation.
+*     7-JUN-2012 (DSB):
+*        Added protected astRegSplit method to split a Region into disjoint
+*        component regions.
+*     15-JUN-2012 (DSB):
+*        Guard against division by zero in RegBase Grid if "ipr" is zero.
+*     7-NOV-2013 (DSB):
+*        Added method astGetRegionFrameSet.
+*     3-FEB-2014 (DSB):
+*        Fix bug masking regions that have no overlap with the supplied array.
 *class--
 
 *  Implementation Notes:
@@ -874,6 +885,7 @@ static int MaskUS( AstRegion *, AstMapping *, int, int, const int[], const int[]
 
 static AstAxis *GetAxis( AstFrame *, int, int * );
 static AstFrame *GetRegionFrame( AstRegion *, int * );
+static AstFrameSet *GetRegionFrameSet( AstRegion *, int * );
 static AstFrame *PickAxes( AstFrame *, int, const int[], AstMapping **, int * );
 static AstFrame *RegFrame( AstRegion *, int * );
 static AstFrameSet *Conv( AstFrameSet *, AstFrameSet *, int * );
@@ -898,6 +910,7 @@ static AstPointSet *RegTransform( AstRegion *, AstPointSet *, int, AstPointSet *
 static AstPointSet *ResolvePoints( AstFrame *, const double [], const double [], AstPointSet *, AstPointSet *, int * );
 static AstRegion *MapRegion( AstRegion *, AstMapping *, AstFrame *, int * );
 static AstRegion *RegBasePick( AstRegion *, int, const int *, int * );
+static AstRegion **RegSplit( AstRegion *, int *, int * );
 static AstSystemType SystemCode( AstFrame *, const char *, int * );
 static AstSystemType ValidateSystem( AstFrame *, AstSystemType, const char *, int * );
 static const char *Abbrev( AstFrame *, int, const char *, const char *, const char *, int * );
@@ -4222,6 +4235,64 @@ f     function is invoked with STATUS set to an error value, or if it
    return result;
 }
 
+static AstFrameSet *GetRegionFrameSet( AstRegion *this, int *status ) {
+/*
+*++
+*  Name:
+c     astGetRegionFrameSet
+f     AST_GETREGIONFRAMESET
+
+*  Purpose:
+*     Obtain a pointer to the encapsulated FrameSet within a Region.
+
+*  Type:
+*     Public virtual function.
+
+*  Synopsis:
+c     #include "region.h"
+c     AstFrame *astGetRegionFrameSet( AstRegion *this )
+f     RESULT = AST_GETREGIONFRAMESET( THIS, STATUS )
+
+*  Class Membership:
+*     Region method.
+
+*  Description:
+*     This function returns a pointer to the FrameSet encapsulated by a
+*     Region. The base Frame is the Frame in which the box was originally
+*     defined, and the current Frame is the Frame into which the Region
+*     is currently mapped (i.e. it will be the same as the Frame returned
+c     by astGetRegionFrame).
+f     by AST_GETREGIONFRAME).
+
+*  Parameters:
+c     this
+f     THIS = INTEGER (Given)
+*        Pointer to the Region.
+f     STATUS = INTEGER (Given and Returned)
+f        The global status.
+
+*  Returned Value:
+c     astGetRegionFrameSet()
+f     AST_GETREGIONFRAMESET = INTEGER
+*        A pointer to a deep copy of the FrameSet represented by the Region.
+*        Using this pointer to modify the FrameSet will have no effect on
+*        the Region.
+
+*  Notes:
+*     - A null Object pointer (AST__NULL) will be returned if this
+c     function is invoked with the AST error status set, or if it
+f     function is invoked with STATUS set to an error value, or if it
+*     should fail for any reason.
+*--
+*/
+
+/* Check the global error status. */
+   if ( !astOK ) return NULL;
+
+/* Return a deep copy of the encapsulated FrameSet. */
+   return astCopy( this->frameset );
+}
+
 void astInitRegionVtab_(  AstRegionVtab *vtab, const char *name, int *status ) {
 /*
 *+
@@ -4322,6 +4393,7 @@ void astInitRegionVtab_(  AstRegionVtab *vtab, const char *name, int *status ) {
    vtab->TestUnc = TestUnc;
    vtab->ClearUnc = ClearUnc;
    vtab->GetRegionFrame = GetRegionFrame;
+   vtab->GetRegionFrameSet = GetRegionFrameSet;
    vtab->MapRegion = MapRegion;
    vtab->Overlap = Overlap;
    vtab->OverlapX = OverlapX;
@@ -4330,6 +4402,7 @@ void astInitRegionVtab_(  AstRegionVtab *vtab, const char *name, int *status ) {
    vtab->BndBaseMesh = BndBaseMesh;
    vtab->RegBaseGrid = RegBaseGrid;
    vtab->RegBaseMesh = RegBaseMesh;
+   vtab->RegSplit = RegSplit;
    vtab->RegBaseBox = RegBaseBox;
    vtab->RegBaseBox2 = RegBaseBox2;
    vtab->RegBasePick = RegBasePick;
@@ -5425,6 +5498,8 @@ f        BADVAL
 *     - A value of zero will be returned if this function is invoked
 *     with the global error status set, or if it should fail for any
 *     reason.
+*     - An error will be reported if the overlap of the Region and
+*     the array cannot be determined.
 
 *  Data Type Codes:
 *     To select the appropriate masking function, you should
@@ -5584,15 +5659,29 @@ static int Mask##X( AstRegion *this, AstMapping *map, int inside, int ndim, \
       npix = 1; \
       npixg = 1; \
       for ( idim = 0; idim < ndim; idim++ ) { \
-         lbndg[ idim ] = MAX( lbnd[ idim ], (int)( lbndgd[ idim ] + 0.5 ) - 2 ); \
-         ubndg[ idim ] = MIN( ubnd[ idim ], (int)( ubndgd[ idim ] + 0.5 ) + 2 ); \
+         if( lbndgd[ idim ] != AST__BAD && ubndgd[ idim ] != AST__BAD ) { \
+            lbndg[ idim ] = MAX( lbnd[ idim ], (int)( lbndgd[ idim ] + 0.5 ) - 2 ); \
+            ubndg[ idim ] = MIN( ubnd[ idim ], (int)( ubndgd[ idim ] + 0.5 ) + 2 ); \
+         } else { \
+            lbndg[ idim ] = lbnd[ idim ]; \
+            ubndg[ idim ] = ubnd[ idim ]; \
+         } \
          npix *= ( ubnd[ idim ] - lbnd[ idim ] + 1 ); \
-         npixg *= ( ubndg[ idim ] - lbndg[ idim ] + 1 ); \
-         if( npixg <= 0 ) break; \
+         if( npixg >= 0 ) npixg *= ( ubndg[ idim ] - lbndg[ idim ] + 1 ); \
       } \
 \
+/* If the bounding box is null, fill the mask with the supplied value if \
+   we assigning the value to the outside of the region (do the opposite if \
+   the Region has been negated). */ \
+      if( npixg <= 0 && astOK ) { \
+         if( ( inside != 0 ) == ( astGetNegated( used_region ) != 0 ) ) { \
+            c = in; \
+            for( ipix = 0; ipix < npix; ipix++ ) *(c++) = val; \
+            result = npix; \
+         } \
+\
 /* If the bounding box is null, return without action. */ \
-      if( npixg > 0 ) { \
+      } else if( npixg > 0 && astOK ) { \
 \
 /* All points outside this box are either all inside, or all outside, the \
    Region. So we can speed up processing by setting all the points which are \
@@ -7465,7 +7554,11 @@ static AstPointSet *RegBaseGrid( AstRegion *this, int *status ){
    is in error. Don't do this if we have reached the maximum number of
    re-tries. */
          if( ntry < 3 ) {
-            np *= (double)meshsize/(double)ipr;
+            if( ipr == 0 ) {
+               np *= 10;
+            } else {
+               np *= (double)meshsize/(double)ipr;
+            }
             result = astAnnul( result );
          }
       }
@@ -7488,6 +7581,77 @@ static AstPointSet *RegBaseGrid( AstRegion *this, int *status ){
    if( !astOK ) result = astAnnul( result );
 
 /* Return the result */
+   return result;
+}
+
+static AstRegion **RegSplit( AstRegion *this, int *nlist, int *status ){
+/*
+*+
+*  Name:
+*     astRegSplit
+
+*  Purpose:
+*     Split a Region into a list of disjoint component Regions.
+
+*  Type:
+*     Protected function.
+
+*  Synopsis:
+*     #include "region.h"
+*     AstRegion **astRegSplit( AstRegion *this, int *nlist )
+
+*  Class Membership:
+*     Region virtual function.
+
+*  Description:
+*     This function splits the supplied Region into a set of disjoint
+*     component Regions. If the Region cannot be split, then the returned
+*     array contains only one pointer - a clone of the supplied Region
+*     pointer.
+
+*  Parameters:
+*     this
+*        Pointer to the Region.
+*     nlist
+*        Pointer to an int in which to return the number of elements in
+*        the returned array.
+
+*  Returned Value:
+*     Pointer to dynamically alloctaed memory holding an array of Region
+*     pointers. The length of this array is given by the value returned
+*     in "*nlist". The pointers in the returned array should be annulled
+*     using astAnnul when no longer needed, and the memory used to hold
+*     the array should be freed using astFree.
+
+*  Notes:
+*    - A NULL pointer is returned if an error has already occurred, or if
+*    this function should fail for any reason.
+*-
+*/
+
+/* Local Variables; */
+   AstRegion **result;
+
+/* Initialise. */
+   result = NULL;
+   *nlist = 0;
+
+/* Check the local error status. */
+   if ( !astOK ) return result;
+
+/* The base class just returns an array containing a clone of the
+   supplied Region pointer. */
+   result = astMalloc( sizeof( *result ) );
+   if( astOK ) {
+      result[ 0 ] = astClone( this );
+      *nlist = 1;
+   }
+
+   if( !astOK ) {
+      result = astFree( result );
+      *nlist = 0;
+   }
+
    return result;
 }
 
@@ -8276,6 +8440,8 @@ f        The global status.
 *    returned larger than the upper limit. Note, this is different to an
 *    axis which has a constant value (in which case both lower and upper
 *    limit will be returned set to the constant value).
+*    - If the bounds on an axis cannot be determined, AST__BAD is returned for
+*    both upper and lower bounds
 
 *--
 */
@@ -8379,7 +8545,12 @@ f        The global status.
 
       for( i = 0; i < ncur; i++ ) {
          width = astAxDistance( frm, i + 1, lbnd[ i ], ubnd[ i ] );
-         ubnd[ i ] = lbnd[ i ] + width;
+         if( width != AST__BAD ) {
+            ubnd[ i ] = lbnd[ i ] + width;
+         } else {
+            ubnd[ i ] = AST__BAD;
+            lbnd[ i ] = AST__BAD;
+         }
       }
 
 /* Release resources. */
@@ -8569,6 +8740,7 @@ f     STATUS = INTEGER (Given and Returned)
 f        The global status.
 
 *  Notes:
+*     - An error is reported if the Region is unbounded.
 *     - If the coordinate system represented by the Region has been
 *     changed since it was first created, the returned axis values refer
 *     to the new (changed) coordinate system, rather than the original
@@ -8594,72 +8766,80 @@ f        The global status.
 /* Check the inherited status. */
    if( !astOK ) return;
 
+/* Report an error if the Region is unbounded. */
+   if( !astGetBounded( this ) ) {
+      if( astOK ) astError( AST__MBBNF, "astGetRegionMesh(%s): The supplied %s"
+                            " is unbounded so no mesh can be created to cover "
+                            "it.", status, astGetClass( this ), astGetClass( this ) );
+   } else {
+
 /* Get the mesh or grid as required. If only the size of the mesh or grid
    is required, get it in the base Frame as there is no need to spend the
    extra time transforming it into the current Frame. */
-   if( maxpoint == 0  ){
-      if( surface ) {
-         pset = astRegBaseMesh( this );
+      if( maxpoint == 0  ){
+         if( surface ) {
+            pset = astRegBaseMesh( this );
+         } else {
+            pset = astRegBaseGrid( this );
+         }
       } else {
-         pset = astRegBaseGrid( this );
+         if( surface ) {
+            pset = astRegMesh( this );
+         } else {
+            pset = astRegGrid( this );
+         }
       }
-   } else {
-      if( surface ) {
-         pset = astRegMesh( this );
-      } else {
-         pset = astRegGrid( this );
-      }
-   }
 
 /* Return the number of points in the mesh or grid. */
-   *npoint = astGetNpoint( pset );
+      *npoint = astGetNpoint( pset );
 
 /* Do nothing more unless a non-zero array size was supplied. */
-   if( *npoint > 0 && maxpoint != 0 && astOK ) {
+      if( *npoint > 0 && maxpoint != 0 && astOK ) {
 
 /* Check the supplied array is large enough. */
-      if( *npoint > maxpoint ) {
-         astError( AST__DIMIN, "astGetRegionMesh(%s): The supplied "
-                   "array can hold up to %d points but the %s supplied "
-                   "has %d points on its mesh (programming error).",
-                   status, astGetClass( this ), maxpoint, astGetClass( this ),
-                   *npoint );
-      }
+         if( *npoint > maxpoint ) {
+            astError( AST__DIMIN, "astGetRegionMesh(%s): The supplied "
+                      "array can hold up to %d points but the %s supplied "
+                      "has %d points on its mesh (programming error).",
+                      status, astGetClass( this ), maxpoint, astGetClass( this ),
+                      *npoint );
+         }
 
 /* Get the dimensionality of the PointSet, and get a pointer to the axis
    values. */
-      nc = astGetNcoord( pset );
-      ptr = astGetPoints( pset );
+         nc = astGetNcoord( pset );
+         ptr = astGetPoints( pset );
 
 /* Check pointers can be used safely. */
-      if ( astOK ) {
+         if ( astOK ) {
 
 /* Check the supplied array has room for all the axes. */
-         if( nc > maxcoord ) {
-            astError( AST__DIMIN, "astGetRegionMesh(%s): The supplied "
-                      "array can hold up to %d axes but the %s supplied "
-                      "has %d axes (programming error).", status,
-                      astGetClass( this ), maxcoord, astGetClass( this ), nc );
+            if( nc > maxcoord ) {
+               astError( AST__DIMIN, "astGetRegionMesh(%s): The supplied "
+                         "array can hold up to %d axes but the %s supplied "
+                         "has %d axes (programming error).", status,
+                         astGetClass( this ), maxcoord, astGetClass( this ), nc );
 
 /* If all is OK, copy the current Frame axis values into the supplied array. */
-         } else {
+            } else {
 
 /* Loop round the axes to be copied. */
-            for( j = 0; j < nc; j++ ) {
+               for( j = 0; j < nc; j++ ) {
 
 /* Get points to the first element of the input and output arrays. */
-               p = ptr[ j ];
-               q = points + j*maxpoint;
+                  p = ptr[ j ];
+                  q = points + j*maxpoint;
 
 /* Copying the axis values. */
-               (void) memcpy( q, p, sizeof( double )*( *npoint ) );
+                  (void) memcpy( q, p, sizeof( double )*( *npoint ) );
+               }
             }
          }
       }
-   }
 
 /* Free resources. */
-   pset = astAnnul( pset );
+      pset = astAnnul( pset );
+   }
 }
 
 static void GetRegionPoints( AstRegion *this, int maxpoint, int maxcoord,
@@ -12648,6 +12828,10 @@ AstFrame *astGetRegionFrame_( AstRegion *this, int *status ){
    if ( !astOK ) return NULL;
    return (**astMEMBER(this,Region,GetRegionFrame))( this, status );
 }
+AstFrameSet *astGetRegionFrameSet_( AstRegion *this, int *status ){
+   if ( !astOK ) return NULL;
+   return (**astMEMBER(this,Region,GetRegionFrameSet))( this, status );
+}
 AstRegion *astMapRegion_( AstRegion *this, AstMapping *map, AstFrame *frame, int *status ){
    if ( !astOK ) return NULL;
    return (**astMEMBER(this,Region,MapRegion))( this, map, frame, status );
@@ -12794,6 +12978,10 @@ void astSetRegFS_( AstRegion *this, AstFrame *frm, int *status ){
 AstPointSet *astRegBaseMesh_( AstRegion *this, int *status ){
    if ( !astOK ) return NULL;
    return (**astMEMBER(this,Region,RegBaseMesh))( this, status );
+}
+AstRegion **astRegSplit_( AstRegion *this, int *nlist, int *status ){
+   if ( !astOK ) return NULL;
+   return (**astMEMBER(this,Region,RegSplit))( this, nlist, status );
 }
 AstPointSet *astRegBaseGrid_( AstRegion *this, int *status ){
    if ( !astOK ) return NULL;
