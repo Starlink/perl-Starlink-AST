@@ -163,6 +163,11 @@ typedef void AstTimeMap;
 #else
 #endif
 
+#if ( (AST_MAJOR_VERS == 7 && AST_MINOR_VERS >= 2) || AST_MAJOR_VERS >= 8 )
+#define HASMAPDEFINED
+#else
+#endif
+
 
 /* Helper functions */
 #include "arrays.h"
@@ -2271,6 +2276,21 @@ astMapType( this, key )
 #else
   ASTCALL(
    RETVAL = astMapType( this, key );
+  )
+#endif
+ OUTPUT:
+  RETVAL
+
+bool
+astMapDefined( this, key )
+  AstKeyMap * this
+  char * key
+ CODE:
+#ifndef HASMAPDEFINED
+  Perl_croak(aTHX_ "astMapDefined: Please upgrade to AST V7.2 or newer");
+#else
+  ASTCALL(
+   RETVAL = astMapDefined( this, key );
   )
 #endif
  OUTPUT:

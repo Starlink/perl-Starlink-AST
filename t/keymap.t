@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use constant NTESTS => 70;
+use constant NTESTS => 80;
 use Test::More tests => NTESTS;
 use Test::Number::Delta;
 
@@ -86,6 +86,9 @@ for my $k (keys %TESTS) {
 
   # check has the key
   ok( $map->MapHasKey( $k), "Confirm key is present");
+
+  # and it is defined
+  ok( $map->MapDefined( $k ), "Confirm key is defined");
 
   # check data type
   my $type = $map->MapType( $k );
