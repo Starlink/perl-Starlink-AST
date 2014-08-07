@@ -191,53 +191,6 @@ Place,Suite 330, Boston, MA  02111-1307, USA
 
 =cut
 
-# Channels need a wrapper
-
-package Starlink::AST::Channel;
-
-sub new {
-  # This should work for FitsChan and Channel and XmlChan
-  my $class = shift;
-  my %args = @_;
-  my ($sink, $source);
-
-  # sink and source are special. All others are attributes
-
-  # Stuff the callbacks in the object [if we were paranoid we would provide
-  # methods to obtain the attribute keys]
-  if (exists $args{sink} ) {
-    $sink = $args{sink};
-    delete $args{sink};
-  }
-  if (exists $args{source} ) {
-    $source = $args{source};
-    delete $args{source};
-  }
-
-  # Convert all remaining options to comma separated string
-  my @options;
-  for my $k (keys %args ) {
-    push(@options, "$k=$args{$k}");
-  }
-  my $options = "";
-  $options = join(",",@options) if @options;
-
-  # Call the underlying routine
-  # Pass in sink and source functions. Can be undef.
-  my $self = $class->_new( $source, $sink, $options );
-
-  return $self;
-}
-
-package Starlink::AST::FitsChan;
-use base qw/ Starlink::AST::Channel /;
-
-package Starlink::AST::XmlChan;
-use base qw/ Starlink::AST::Channel /;
-
-package Starlink::AST::StcsChan;
-use base qw/ Starlink::AST::Channel /;
-
 # All the inheritance stuff
 
 package Starlink::AST;
@@ -349,8 +302,44 @@ use base qw/ Starlink::AST /;
 package Starlink::AST::SkyAxis;
 use base qw/ Starlink::AST::Axis /;
 
+# Channels need a wrapper
+
 package Starlink::AST::Channel;
 use base qw/ Starlink::AST  /;
+
+sub new {
+  # This should work for FitsChan and Channel and XmlChan
+  my $class = shift;
+  my %args = @_;
+  my ($sink, $source);
+
+  # sink and source are special. All others are attributes
+
+  # Stuff the callbacks in the object [if we were paranoid we would provide
+  # methods to obtain the attribute keys]
+  if (exists $args{sink} ) {
+    $sink = $args{sink};
+    delete $args{sink};
+  }
+  if (exists $args{source} ) {
+    $source = $args{source};
+    delete $args{source};
+  }
+
+  # Convert all remaining options to comma separated string
+  my @options;
+  for my $k (keys %args ) {
+    push(@options, "$k=$args{$k}");
+  }
+  my $options = "";
+  $options = join(",",@options) if @options;
+
+  # Call the underlying routine
+  # Pass in sink and source functions. Can be undef.
+  my $self = $class->_new( $source, $sink, $options );
+
+  return $self;
+}
 
 # Need to rebless objects obtained from an astRead into the
 # correct class rather than generic variant.
