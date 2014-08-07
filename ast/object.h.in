@@ -259,20 +259,20 @@
 *     All Rights Reserved.
 
 *  Licence:
-*     This program is free software; you can redistribute it and/or
-*     modify it under the terms of the GNU General Public Licence as
-*     published by the Free Software Foundation; either version 2 of
-*     the Licence, or (at your option) any later version.
-*
-*     This program is distributed in the hope that it will be
-*     useful,but WITHOUT ANY WARRANTY; without even the implied
-*     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-*     PURPOSE. See the GNU General Public Licence for more details.
-*
-*     You should have received a copy of the GNU General Public Licence
-*     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 51 Franklin Street,Fifth Floor, Boston, MA
-*     02110-1301, USA
+*     This program is free software: you can redistribute it and/or
+*     modify it under the terms of the GNU Lesser General Public
+*     License as published by the Free Software Foundation, either
+*     version 3 of the License, or (at your option) any later
+*     version.
+*     
+*     This program is distributed in the hope that it will be useful,
+*     but WITHOUT ANY WARRANTY; without even the implied warranty of
+*     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*     GNU Lesser General Public License for more details.
+*     
+*     You should have received a copy of the GNU Lesser General
+*     License along with this program.  If not, see
+*     <http://www.gnu.org/licenses/>.
 
 *  Authors:
 *     RFWS: R.F. Warren-Smith (Starlink)
@@ -1328,6 +1328,11 @@ typedef struct AstObjectVtab {
    lowest-level, component). */
    AstClassIdentifier *top_id;
 
+/* Pointer to a dynamically allocated string holding the default
+   attribute values to use when creating new objects. These are read from
+   environment variables of the form "<CLASSNAME>_OPTIONS". */
+   const char *defaults;
+
 /* Properties specific to this class. */
    void ( *CleanAttribs )( AstObject *, int * );
    AstObject *( *Cast )( AstObject *, AstObject *, int * );
@@ -1350,6 +1355,7 @@ typedef struct AstObjectVtab {
    void (* SetIdent)( AstObject *, const char *, int * );
    void (* Show)( AstObject *, int * );
    void (* VSet)( AstObject *, const char *, char **, va_list, int * );
+   void (* EnvSet)( AstObject *, int * );
 
    void *(* GetProxy)( AstObject *, int * );
    void (* SetProxy)( AstObject *, void *, int * );
@@ -1540,6 +1546,7 @@ void astSetDump_( AstObjectVtab *, void (*)( AstObject *, AstChannel *, int * ),
 void astSetVtab_( AstObject *, AstObjectVtab *, int * );
 void astSetID_( AstObject *, const char *, int * );
 void astSetIdent_( AstObject *, const char *, int * );
+void astEnvSet_( AstObject *, int * );
 void astVSet_( AstObject *, const char *, char **, va_list, int * );
 
 #endif
@@ -1714,6 +1721,8 @@ astINVOKE(V,astSetVtab_((AstObject *)object,(AstObjectVtab *)(vtab),STATUS_PTR))
 #define astSetIdent(this,id) astINVOKE(V,astSetIdent_(astCheckObject(this),id,STATUS_PTR))
 #define astVSet(this,settings,text,args) \
 astINVOKE(V,astVSet_(astCheckObject(this),settings,text,args,STATUS_PTR))
+#define astEnvSet(this) \
+astINVOKE(V,astEnvSet_(astCheckObject(this),STATUS_PTR))
 #define astTestAttrib(this,attrib) \
 astINVOKE(V,astTestAttrib_(astCheckObject(this),attrib,STATUS_PTR))
 #define astTestID(this) astINVOKE(V,astTestID_(astCheckObject(this),STATUS_PTR))
