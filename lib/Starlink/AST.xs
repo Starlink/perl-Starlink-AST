@@ -526,7 +526,16 @@ AST__BASE()
  OUTPUT:
   RETVAL
 
-
+int
+AST__ALLFRAMES()
+ CODE:
+#ifdef AST__ALLFRAMES
+    RETVAL = AST__ALLFRAMES;
+#else
+    Perl_croak(aTHX_ "Constant AST__ALLFRAMES not defined\n");
+#endif
+ OUTPUT:
+  RETVAL
 
 MODULE = Starlink::AST     PACKAGE = Starlink::AST PREFIX = ast
 
