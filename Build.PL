@@ -24,15 +24,13 @@ my $file = File::Spec->catfile( "lib", "Starlink", "AST.pm" );
 my $build = Module::Build->new
   (
    module_name => "Starlink::AST",
-   abstract_from => $file,
-   license => "gpl",
+   license => "GPL_2",
    author => [
               'Tim Jenness <tjenness@cpan.org>',
              ],
-   version_from => $file,
    meta_merge => {
                resources =>  {
-                              repository => "git://starlink.jach.hawaii.edu/perl-Starlink-AST.git",
+                              repository => 'https://github.com/Starlink/perl-Starlink-AST.git',
                              },
                 },
    recommends => {
