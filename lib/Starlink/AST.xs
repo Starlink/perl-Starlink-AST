@@ -242,7 +242,7 @@ void astThrowException ( int status, AV* errorstack ) {
       if (i != nelem) sv_catpv( errsv, "\n");
     }
   }
-  croak( SvPV_nolen( errsv ) );
+  Perl_croak( aTHX_ "%s", SvPV_nolen( errsv ) );
 }
 
 /* Callbacks */
@@ -612,7 +612,7 @@ ast_Error( status, message)
   StatusType status
   char * message
  CODE:
-  astError( status, message);
+  astError( status, "%s", message);
 
 
 # Call only from within an AST callback
@@ -1358,7 +1358,7 @@ astAnnul( this )
   SV* arg = ST(0);
  CODE:
   ASTCALL(
-   astAnnul( this );
+   this = astAnnul( this );
   )
   setPerlObjectAttr( arg, "_annul",newSViv(1));
 
@@ -1385,12 +1385,14 @@ ast_Copy( this )
  OUTPUT:
   RETVAL
 
+# Note that we do not return a NULL object
+
 void
 astDelete( this )
   AstObject * this
  CODE:
   ASTCALL(
-   astDelete( this );
+   this = astDelete( this );
   )
 
 void
@@ -1596,7 +1598,7 @@ astDESTROY( obj )
     MUTEX_LOCK(&AST_mutex);
     My_astClearErrMsg();
     old_ast_status = astWatch( my_xsstatus );
-    astAnnul( this );
+    this = astAnnul( this );
     astWatch( old_ast_status );
     My_astCopyErrMsg( &local_err, *my_xsstatus );
     MUTEX_UNLOCK(&AST_mutex);
@@ -1881,8 +1883,8 @@ astMapPut1S( this, key, values, comment)
         }
         ival = SvIV(*element);
         if (ival < SHRT_MIN || ival > SHRT_MAX) {
-          Perl_croak( aTHX_ "MapPut1S: Value of element %d (%d) is out of range for a short",
-                      i, ival );
+          Perl_croak( aTHX_ "MapPut1S: Value of element %d (%ld) is out of range for a short",
+                      i, (long)ival );
         }
      }
   }
