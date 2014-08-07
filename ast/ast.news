@@ -1,6 +1,6 @@
 AST Library
 -----------
-   A new release (V7.0.3) of the Starlink AST (astrometry) library is
+   A new release (V8.0.1) of the Starlink AST (astrometry) library is
 now available.
 
    AST provides a comprehensive range of facilities for attaching
@@ -16,11 +16,168 @@ environment-independent.
 Main Changes in this Version
 ----------------------------
 
+- The FITS XPH projection is now supported.
+- The order of WCS axes within new FITS-WCS headers created by astWrite
+  can now be controlled using a new attribute called FitsAxisOrder.
+
+Main Changes in V8.0.0
+----------------------
+
+- AST is now distributed under the Lesser GPL licence.
+
+- Least squares fitting of N-dimensional polynomials is now done using
+files copied from the C/C++ Minpack package (see
+http://devernay.free.fr/hacks/cminpack/index.html).
+
+- Use of the IAU SOFA library has been replaced by ERFA library, which is
+a re-badged copy of SOFA distributed under a less restrictive license. A
+copy of ERFA is included within AST.
+
+Main Changes in V7.3.4
+----------------------
+
+- By default, the simplification of Polygons no longer checks that the
+edges are not bent by the simplification. A new attribute, SimpVertices,
+can be set to zero in order to re-instate this check.
+
+- The Polygon class has a new mathod, astConvex, that returns a Polygon
+representing the shortest polygon (i.e. convex hull) enclosing a
+specified set of pixel values within a supplied array.
+
+Main Changes in V7.3.3
+----------------------
+
+- The FitsChan class has new attributes CardName and CardComm, which hold
+the keyword name and comment of the current card.
+
+- When reading FITS-WCS headers that include polynomial distortion in the
+SIP format, any inverse transformation specified in the header is now
+ignored and a new inverse is created to replace it based on the supplied
+forward transformation. Previously, an inverse was created only if the
+header did not include an inverse. The accuracy of the inverse
+transformation has also been improved, although it may now be slower to
+evaluate in some circumstances.
+
+- A bug has been fixed that could over-write the FitsChan CarLin attribute
+with a non-zero value if the header contains a spectral axis.
+
+- The default options for each newly created FitsChan can now be
+specified via the environment variable FITSCHAN_OPTIONS.
+
+Main Changes in V7.3.2
+----------------------
+
+- Fix support for reading GLS projections from FITS headers.
+
+- The KeyMap class has new sorting options "KeyAgeUp" and "KeyAgeDown" that
+retain the position of an existing entry if its value is changed. See the
+SortBy attribute.
+
+- A bug has been fixed in FitsChan that caused CDELT keywords for sky
+axes to be treated as radians rather than degrees when reading a FITS
+header, if the corresponding CTYPE values included no projection code.
+
+
+Main Changes in V7.3.1
+----------------------
+
+- Fix bug that could cause a segmenatation fault when reading a FITS TNX
+header.
+
+Main Changes in V7.3.0
+----------------------
+
+- IMPORTANT! The interface for the astRebinSeq<X> (AST_REBINSEQ) family
+of functions has been changed in order to allow a greater number of
+pixels to be pasted into the output array. In C, the "nused" parameter
+is now a pointer to a "int64_t" variable, instead of a simple "int". In
+Fortran, the NUSED argument for AST_REBINSEQ<X> is now an INTEGER*8.
+
+APPLICATION CODE SHOULD BE CHANGED ACCORDINGLY TO AVOID SEGMENTATION
+FAULTS AND OTHER ERRATIC BEHAVIOUR.
+
+- Added a new facility to the FrameSet class to allow each Frame to be
+associated with multiple Mappings, any one of which can be used to
+connect the Frame to the other Frames in the FrameSet. The choice of
+which Mapping to use is controlled by the new "Variant" attribute of the
+FrameSet class.
+
+- Mappings (but not Frames) that have a value set for their Ident attribute
+are now left unchanged by the astSimplify (AST_SIMPLIFY) function.
+
+Main Changes in V7.2.0
+----------------------
+
+- A new method call astMapDefined has been added to the KeyMap class.
+It checks if a gtiven key name has a defined value in a given KeyMap.
+
+
+Main Changes in V7.1.1
+----------------------
+
+- A bug has been fixed in FitsChan that caused inappropriate CTYPE values
+to be generated when writing a FrameSet to FITS-WCS headers if the
+current Frame describes generalised spherical coordinates (i.e. a
+SkyFrame with System=Unknown).
+
+- When a FitsChan is used to write an "offset" SkyFrame (see attribute
+SkyRefIs) to a FITS-WCS encoded header, two alternate axis descriptions
+are now created - one for the offset coordinates and one for the absolute
+coordinates. If such a header is subsequently read back into AST, the
+original offset SkyFrame is recreated.
+
+
+Main Changes in V7.1.0
+----------------------
+
+- IMPORTANT! The default behaviour of astRebinSeq is now NOT to conserve
+flux. To conserve flux, the AST__CONSERVEFLUX flag should be supplied
+when calling astRebinSeq. Without this flag, each output value is a
+weighted mean of the neighbouring input values.
+
+- A new flag AST__NONORM can be used with astRebinSeq<X> to indicate that
+normalisation of the output arrays is not required. In this case no
+weights array need be supplied.
+
+- A bug has been fixed in astAddFrame (AST_ADDFRAME) method that could
+result in the incorrect inversion of Mappings within the FrameSet when
+the AST__ALLFRAMES flag is supplied for the "iframe" parameter.
+
+- The astRate method has been re-written to make it faster and more
+reliable.
+
+Main Changes in V7.0.6
+----------------------
+
+- A bug has been fixed in astRebinSeq<X> which could result in
+incorrect normalisation of the final binned data and variance values.
+
+- When reading a FrameSet from a FITS-DSS header, the keywords CNPIX1 and
+CNPIX2 now default to zero if absent. Previously an error was reported.
+
+Main Changes in V7.0.5
+----------------------
+
+- The FitsChan class can now read FITS headers that use the SAO
+convention for representing distorted TAN projections, based on the use
+of "COi_j" keywords to hold the coefficients of the distortion polynomial.
+
+
+Main Changes in V7.0.4
+----------------------
+
+- The previously private grf3d.h header file is now installed into
+prefix/include.
+
+
+Main Changes in V7.0.3
+----------------------
+
 - A bug has been fixed which could cause an incorrect axis to be used when
 accessing axis attributes within CmpFrames. This could happen if axes
 within the CmpFrame have been permuted.
 
-- A bug has been fixed in the SKyFrame class that could cause the two
+- A bug has been fixed in the SkyFrame class that could cause the two
 values of the SkyRef and/or SkyRefP attributes to be reversed.
 
 - Bugs have been fixed in the CmpRegion class that should allow the border
@@ -28,7 +185,7 @@ around a compound Region to be plotted more quickly, and more accurately.
 Previously, component Regions nested deeply inside a CmpRegion may have
 been completely or partially ignored.
 
-- A bug has been fixed in the Plot3D class that caused a sementation
+- A bug has been fixed in the Plot3D class that caused a segmentation
 violation if the MinTick attribute was set to zero.
 
 - The astResampleX set of methods now includes astResampleK and
