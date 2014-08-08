@@ -68,7 +68,6 @@ ast/channel.c
 ast/channel.h
 ast/circle.c
 ast/circle.h
-ast/cminpack
 ast/cminpack/cminpack.h
 ast/cminpack/cminpackP.h
 ast/cminpack/CopyrightMINPACK.txt
