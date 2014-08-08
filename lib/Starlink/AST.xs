@@ -173,7 +173,7 @@ typedef void AstTimeMap;
 #include "arrays.h"
 #include "astTypemap.h"
 
-char ** pack1Dchar( AV * avref ) {
+static char ** pack1Dchar( AV * avref ) {
   int i;
   SV ** elem;
   char ** outarr;
@@ -196,7 +196,7 @@ char ** pack1Dchar( AV * avref ) {
   return outarr;
 }
 
-AstObject ** pack1DAstObj( AV * avref ) {
+static AstObject ** pack1DAstObj( AV * avref ) {
   int i;
   SV ** elem;
   AstObject ** outarr;
@@ -232,7 +232,7 @@ AstObject ** pack1DAstObj( AV * avref ) {
    add to the complexity by calling out into perl.
 */
 
-void astThrowException ( int status, AV* errorstack ) {
+static void astThrowException ( int status, AV* errorstack ) {
   size_t i;
   size_t nelem;
 
@@ -410,6 +410,9 @@ AV* ErrBuff;
 /* This is the error handler.
  Store error messages in an array. Need to worry about thread-local storage
  very soon.
+
+ This symbol must be available to the AST routines as we are deliberately
+ replacing the AST error handler.
  */
 
 void astPutErr_ ( int status, const char * message ) {
@@ -417,7 +420,7 @@ void astPutErr_ ( int status, const char * message ) {
   av_push(ErrBuff, newSVpv((char*)message, 0) );
 }
 
-void My_astClearErrMsg () {
+static void My_astClearErrMsg () {
   av_clear( ErrBuff );
 }
 
@@ -431,7 +434,7 @@ void My_astClearErrMsg () {
    Does not try to do anything if status is 0
  */
 
-void My_astCopyErrMsg ( AV ** newbuff, int status ) {
+static void My_astCopyErrMsg ( AV ** newbuff, int status ) {
   size_t i;
   size_t nelem;
   if (status == 0) return;
@@ -454,8 +457,8 @@ void My_astCopyErrMsg ( AV ** newbuff, int status ) {
 
 /* Since you can not put CPP code within CPP code inside XS we need
    to provide a special wrapper routine for astRate */
-void myAstRate ( AstMapping * this, double * cat, int ax1, int ax2,
-		 double * d2) {
+static void myAstRate ( AstMapping * this, double * cat, int ax1, int ax2,
+                        double * d2) {
   double RETVAL;
   dXSARGS;
 
