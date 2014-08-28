@@ -4,6 +4,10 @@ use strict;
 use Test::More;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
 
  eval "use Tk; use Tk::Button;";
  if ( $@ ) {

@@ -10,6 +10,10 @@ require_ok( "Starlink::AST::PGPLOT" );
 use File::Spec;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
 
  eval { require PGPLOT; PGPLOT::pgbegin(0,"/xw",1,1) };
  if ( $@ ) {

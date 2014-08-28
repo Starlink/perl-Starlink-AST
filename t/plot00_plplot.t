@@ -4,6 +4,11 @@ use strict;
 use Test::More;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
+
  eval {require Graphics::PLplot; };
  if ( $@ ) {
    plan skip_all => "Graphics::PLplot module not installed.";

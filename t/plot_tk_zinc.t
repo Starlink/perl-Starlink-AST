@@ -6,6 +6,10 @@ use Data::Dumper;
 use File::Spec;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
 
  eval "use Tk";
  if ($@) {

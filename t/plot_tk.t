@@ -5,6 +5,10 @@ use Test::More;
 use Data::Dumper;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
 
  eval "use Tk; use Tk::Button";
  if ( $@ ) {

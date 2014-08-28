@@ -4,6 +4,11 @@ use strict;
 use Test::More;
 
 BEGIN {
+ unless (exists $ENV{'DISPLAY'}) {
+   plan skip_all => '$DISPLAY is not set.';
+   exit;
+ }
+
  # pgbegin( $unit, $file, $nxsub, $nysub );
  eval { require PGPLOT; PGPLOT::pgbegin(0,"/xw",1,1) };
  if ( $@ ) {
