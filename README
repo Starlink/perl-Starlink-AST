@@ -74,6 +74,11 @@ Place,Suite 330, Boston, MA  02111-1307, USA
 HISTORY
 -------
 
+v1.05   + Fix MSWin32 build (thanks to Graham Bell)
+        + Only run plotting tests if $DISPLAY is set (thanks to Graham Bell)
+
+v1.04   + Fixes of sub-package version numbers for CPAN indexer
+
 v1.03   + Now ships with AST v8.0.0+ (this includes ERFA 1.1 and PAL 0.5.0)
         + AST now uses the LGPL license
         + Possible fix for MSWin32 build issues.

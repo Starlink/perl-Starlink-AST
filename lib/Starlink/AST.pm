@@ -10,7 +10,7 @@ require DynaLoader;
 use base qw| DynaLoader |;
 
 
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 bootstrap Starlink::AST $VERSION;
 
