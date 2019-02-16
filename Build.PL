@@ -72,6 +72,11 @@ my $class = Module::Build->subclass(code => <<'EOF');
         $self->depends_on('prepare');
         $self->SUPER::ACTION_dist(@_);
     }
+    sub ACTION_manifest {
+        my $self = shift;
+        $self->depends_on('prepare');
+        $self->SUPER::ACTION_manifest(@_);
+    }
 EOF
 
 my $build = $class->new

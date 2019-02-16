@@ -1,1 +1,12 @@
-^MYMETA.yml$
+^MYMETA\.yml$
+^MYMETA\.json$
+^\.git
+^extsrc\/(?!pal\/|erfa\/)
+^_build\/
+^helper\/
+^Build$
+^MANIFEST\.bak$
+^MANIFEST\.SKIP$
+^data/m31\.sdf$
+\..*\.swp$
+~$
