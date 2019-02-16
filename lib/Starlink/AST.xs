@@ -3889,7 +3889,7 @@ astSlaAdd( this, cvt, args )
  CODE:
   cargs = pack1D(newRV_noinc((SV*)args), 'd');
   ASTCALL(
-   astSlaAdd( this, cvt, cargs );
+   astSlaAdd( this, cvt, av_len(args), cargs );
   )
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::SpecMap PREFIX = astSpec
@@ -3907,7 +3907,7 @@ astSpecAdd( this, cvt, args )
   Perl_croak(aTHX_ "astSpecAdd: Please upgrade to AST v2.x or newer");
 #else
   ASTCALL(
-   astSpecAdd( this, cvt, cargs );
+   astSpecAdd( this, cvt, av_len(args), cargs );
   )
 #endif
 

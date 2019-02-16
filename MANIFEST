@@ -17,6 +17,8 @@ ast/c2f77.c
 ast/c2f77.h
 ast/channel.c
 ast/channel.h
+ast/chebymap.c
+ast/chebymap.h
 ast/circle.c
 ast/circle.h
 ast/cminpack/cminpack.h
@@ -99,6 +101,8 @@ ast/matrixmap.c
 ast/matrixmap.h
 ast/memory.c
 ast/memory.h
+ast/moc.c
+ast/moc.h
 ast/normmap.c
 ast/normmap.h
 ast/nullregion.c
@@ -106,9 +110,9 @@ ast/nullregion.h
 ast/object.c
 ast/object.h
 ast/object.h.in
-ast/pal.c
 ast/pal.h
 ast/pal2ast.h
+ast/palwrap.c
 ast/pcdmap.c
 ast/pcdmap.h
 ast/permmap.c
@@ -179,6 +183,8 @@ ast/unit.c
 ast/unit.h
 ast/unitmap.c
 ast/unitmap.h
+ast/unitnormmap.c
+ast/unitnormmap.h
 ast/version.h
 ast/wcsmap.c
 ast/wcsmap.h
@@ -191,6 +197,8 @@ ast/xml.c
 ast/xml.h
 ast/xmlchan.c
 ast/xmlchan.h
+ast/xphmap.c
+ast/xphmap.h
 ast/zoommap.c
 ast/zoommap.h
 Build.PL
@@ -256,6 +264,8 @@ extsrc/erfa/d2tf.c
 extsrc/erfa/dat.c
 extsrc/erfa/dtdb.c
 extsrc/erfa/dtf2d.c
+extsrc/erfa/eceq06.c
+extsrc/erfa/ecm06.c
 extsrc/erfa/ee00.c
 extsrc/erfa/ee00a.c
 extsrc/erfa/ee00b.c
@@ -269,6 +279,7 @@ extsrc/erfa/epb2jd.c
 extsrc/erfa/epj.c
 extsrc/erfa/epj2jd.c
 extsrc/erfa/epv00.c
+extsrc/erfa/eqec06.c
 extsrc/erfa/eqeq94.c
 extsrc/erfa/era00.c
 extsrc/erfa/erfa.h
@@ -292,6 +303,7 @@ extsrc/erfa/fk5hip.c
 extsrc/erfa/fk5hz.c
 extsrc/erfa/fw2m.c
 extsrc/erfa/fw2xy.c
+extsrc/erfa/g2icrs.c
 extsrc/erfa/gc2gd.c
 extsrc/erfa/gc2gde.c
 extsrc/erfa/gd2gc.c
@@ -306,6 +318,7 @@ extsrc/erfa/gst06a.c
 extsrc/erfa/gst94.c
 extsrc/erfa/h2fk5.c
 extsrc/erfa/hfk5z.c
+extsrc/erfa/icrs2g.c
 extsrc/erfa/INFO
 extsrc/erfa/ir.c
 extsrc/erfa/jd2cal.c
@@ -314,6 +327,13 @@ extsrc/erfa/ld.c
 extsrc/erfa/ldn.c
 extsrc/erfa/ldsun.c
 extsrc/erfa/LICENSE
+extsrc/erfa/lteceq.c
+extsrc/erfa/ltecm.c
+extsrc/erfa/lteqec.c
+extsrc/erfa/ltp.c
+extsrc/erfa/ltpb.c
+extsrc/erfa/ltpecl.c
+extsrc/erfa/ltpequ.c
 extsrc/erfa/Makefile.am
 extsrc/erfa/num00a.c
 extsrc/erfa/num00b.c
@@ -508,3 +528,5 @@ t/unitmap.t
 t/xmlchan.t
 t/zoommap.t
 typemap
+META.yml
+META.json
