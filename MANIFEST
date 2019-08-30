@@ -103,6 +103,8 @@ ast/memory.c
 ast/memory.h
 ast/moc.c
 ast/moc.h
+ast/mocchan.c
+ast/mocchan.h
 ast/normmap.c
 ast/normmap.h
 ast/nullregion.c
@@ -494,6 +496,8 @@ lib/Starlink/AST_ERR.xsh
 lib/Starlink/AST_GRF.xsh
 lib/Starlink/AST_WCSMAP.xsh
 MANIFEST
+META.json
+META.yml
 README
 src/arrays.c
 src/arrays.h
@@ -528,5 +532,3 @@ t/unitmap.t
 t/xmlchan.t
 t/zoommap.t
 typemap
-META.yml
-META.json
