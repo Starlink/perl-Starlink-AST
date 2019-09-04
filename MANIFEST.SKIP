@@ -3,6 +3,7 @@
 ^\.git
 ^extsrc\/(?!pal\/|erfa\/)
 ^_build\/
+^blib\/
 ^helper\/
 ^Build$
 ^MANIFEST\.bak$
@@ -10,3 +11,5 @@
 ^data/m31\.sdf$
 \..*\.swp$
 ~$
+.*\.o
+^lib/Starlink/AST.c
