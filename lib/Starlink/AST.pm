@@ -672,6 +672,10 @@ sub CLEAR {
 }
 
 
+package Starlink::AST::Table;
+use base qw/ Starlink::AST::KeyMap /;
+our $VERSION = '1.00';
+
 package Starlink::AST::Mapping;
 use base qw/ Starlink::AST /;
 our $VERSION = '1.00';
@@ -704,6 +708,10 @@ package Starlink::AST::MatrixMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
+package Starlink::AST::NormMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
 package Starlink::AST::PcdMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
@@ -716,7 +724,15 @@ package Starlink::AST::PolyMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
+package Starlink::AST::ChebyMap;
+use base qw/ Starlink::AST::PolyMap /;
+our $VERSION = '1.00';
+
 package Starlink::AST::RateMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
+package Starlink::AST::SelectorMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
@@ -733,6 +749,10 @@ use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
 package Starlink::AST::SpecMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
+package Starlink::AST::SwitchMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
@@ -753,6 +773,14 @@ use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
 package Starlink::AST::TimeMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
+package Starlink::AST::TranMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
+package Starlink::AST::UnitNormMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
@@ -813,6 +841,30 @@ our $VERSION = '1.00';
 
 package Starlink::AST::Prism;
 use base qw/ Starlink::AST::Region /;
+our $VERSION = '1.00';
+
+package Starlink::AST::PointList;
+use base qw/ Starlink::AST::Region /;
+our $VERSION = '1.00';
+
+package Starlink::AST::Stc;
+use base qw/ Starlink::AST::Region /;
+our $VERSION = '1.00';
+
+package Starlink::AST::StcCatalogEntryLocation;
+use base qw/ Starlink::AST::Stc /;
+our $VERSION = '1.00';
+
+package Starlink::AST::StcResourceProfile;
+use base qw/ Starlink::AST::Stc /;
+our $VERSION = '1.00';
+
+package Starlink::AST::StcSearchLocation;
+use base qw/ Starlink::AST::Stc /;
+our $VERSION = '1.00';
+
+package Starlink::AST::StcObsDataLocation;
+use base qw/ Starlink::AST::Stc /;
 our $VERSION = '1.00';
 
 package Starlink::AST::FluxFrame;
@@ -1017,6 +1069,67 @@ sub debug {
   $self->GScales( sub { &__dumpargs("GAttr",@_);  return (1,1,1);} );
   $self->GCap( sub { &__dumpargs("GAttr",@_);  return (1);} );
 
+}
+
+package Starlink::AST::Plot3D;
+use base qw/ Starlink::AST::Plot/;
+our $VERSION = '1.00';
+
+sub new {
+  my $class = shift;
+  my @args = @_;
+
+  my $gbox = $args[1];
+  my $pbox = $args[2];
+
+  # Call the underlying routine
+  my $self = $class->_new( @args );
+
+  $self->{_xglo} = $$gbox[0] if defined $$gbox[0];
+  $self->{_xghi} = $$gbox[3] if defined $$gbox[3];
+  $self->{_yglo} = $$gbox[1] if defined $$gbox[1];
+  $self->{_yghi} = $$gbox[4] if defined $$gbox[4];
+  $self->{_zglo} = $$gbox[2] if defined $$gbox[2];
+  $self->{_zghi} = $$gbox[5] if defined $$gbox[5];
+
+
+  $self->{_xplo} = $$pbox[0] if defined $$pbox[0];
+  $self->{_xphi} = $$pbox[3] if defined $$pbox[3];
+  $self->{_yplo} = $$pbox[1] if defined $$pbox[1];
+  $self->{_yphi} = $$pbox[4] if defined $$pbox[4];
+  $self->{_zplo} = $$pbox[2] if defined $$pbox[2];
+  $self->{_zphi} = $$pbox[5] if defined $$pbox[5];
+
+  return $self;
+}
+
+sub GBox {
+  my $self = shift;
+  if( @_ ) {
+     my $gbox = shift;
+     $self->{_xglo} = $$gbox[0];
+     $self->{_xghi} = $$gbox[3];
+     $self->{_yglo} = $$gbox[1];
+     $self->{_yghi} = $$gbox[4];
+     $self->{_zglo} = $$gbox[2];
+     $self->{_zghi} = $$gbox[5];
+
+  }
+  return ($self->{_xglo}, $self->{_xghi}, $self->{_yglo}, $self->{_yghi}, $self->{_zglo}, $self->{_zghi} );
+}
+
+sub PBox {
+  my $self = shift;
+  if( @_ ) {
+     my $pbox = shift;
+     $self->{_xplo} = $$pbox[0];
+     $self->{_xphi} = $$pbox[3];
+     $self->{_yplo} = $$pbox[1];
+     $self->{_yphi} = $$pbox[4];
+     $self->{_zplo} = $$pbox[2];
+     $self->{_zphi} = $$pbox[5];
+  }
+  return ($self->{_xplo}, $self->{_xphi}, $self->{_yplo}, $self->{_yphi}, $self->{_zplo}, $self->{_zphi} );
 }
 
 package Starlink::AST::CmpFrame;
