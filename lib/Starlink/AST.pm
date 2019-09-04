@@ -803,6 +803,10 @@ package Starlink::AST::CmpRegion;
 use base qw/ Starlink::AST::Region /;
 our $VERSION = '1.00';
 
+package Starlink::AST::Moc;
+use base qw/ Starlink::AST::Region /;
+our $VERSION = '1.00';
+
 package Starlink::AST::NullRegion;
 use base qw/ Starlink::AST::Region /;
 our $VERSION = '1.00';

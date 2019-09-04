@@ -53,6 +53,7 @@ AstZoomMap *	T_ASTOBJ
 StatusType	T_STATUSINT
 WcsMapType	T_WCSMAPINT
 const char *	T_PV
+int64_t	T_IV
 
 INPUT
 
