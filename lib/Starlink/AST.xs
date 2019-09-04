@@ -1376,6 +1376,17 @@ astTest( this, attrib )
  OUTPUT:
   RETVAL
 
+bool
+ast_Equal( this, that )
+  AstObject * this
+  AstObject * that
+ CODE:
+  ASTCALL (
+   RETVAL = astEqual( this, that );
+  )
+ OUTPUT:
+  RETVAL
+
 # Use annul as automatic destructor
 # For automatic destructor we do not want to throw an exception
 # on error. So do not use ASTCALL. Do a manual printf to stderr and continue.
@@ -3031,6 +3042,39 @@ astGetRegionBounds( this )
   XPUSHs(newRV_noinc((SV*) lbnd));
   XPUSHs(newRV_noinc((SV*) ubnd));
 
+void
+astGetRegionMesh( this, surface )
+  AstRegion * this
+  int surface
+ PREINIT:
+  int maxpoint;
+  int naxes;
+  int npoint;
+  double * cpoints;
+  AV * points;
+  AV * coord;
+  int i;
+  int axis;
+ PPCODE:
+  naxes = astGetI( this, "Naxes" );
+
+  ASTCALL(
+    astGetRegionMesh( this, surface, 0, 0, &maxpoint, 0 );
+  )
+
+  cpoints = get_mortalspace( naxes * maxpoint, 'd' );
+
+  ASTCALL(
+    astGetRegionMesh( this, surface, maxpoint, naxes * maxpoint, &npoint, cpoints );
+  )
+
+  points = newAV();
+
+  unpack1D( newRV_noinc((SV*) points), cpoints, 'd', naxes * npoint );
+
+  XPUSHs(newRV_noinc((SV*) points));
+
+
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Ellipse
 
 AstEllipse *
@@ -3239,6 +3283,16 @@ AST__OR()
  OUTPUT:
   RETVAL
 
+int
+AST__XOR()
+ CODE:
+#ifdef AST__XOR
+    RETVAL = AST__XOR;
+#else
+    Perl_croak(aTHX_ "Constant AST__XOR not defined\n");
+#endif
+ OUTPUT:
+  RETVAL
 
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Circle
@@ -3278,6 +3332,179 @@ new( class, frame, form, centre, point, unc, options )
   if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
  OUTPUT:
   RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::Moc
+
+AstMoc *
+new( class, options )
+  char * class
+  char * options
+ CODE:
+  ASTCALL(
+     RETVAL = astMoc( options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+void
+AddCell( this, cmode, order, npix )
+  AstMoc * this
+  int cmode
+  int order
+  int64_t npix
+ CODE:
+  ASTCALL(
+   astAddCell( this, cmode, order, npix );
+  )
+
+void
+GetCell( this, icell )
+  AstMoc * this
+  int icell
+ PREINIT:
+  int order;
+  int64_t npix;
+ PPCODE:
+  ASTCALL(
+    astGetCell( this, icell, &order, &npix );
+  )
+  XPUSHs(sv_2mortal(newSViv(order)));
+  XPUSHs(sv_2mortal(newSViv(npix)));
+
+int
+TestCell( this, order, npix, parent )
+  AstMoc * this
+  int order
+  int64_t npix
+  int parent
+ CODE:
+  ASTCALL(
+    RETVAL = astTestCell( this, order, npix, parent );
+  )
+ OUTPUT:
+  RETVAL
+
+void
+AddRegion( this, cmode, region)
+  AstMoc * this
+  int cmode
+  AstRegion * region
+ CODE:
+  ASTCALL(
+    astAddRegion( this, cmode, region );
+  )
+
+AstFitsChan *
+GetMocHeader( this )
+  AstMoc * this
+ CODE:
+  ASTCALL(
+    RETVAL = astGetMocHeader( this );
+  )
+ OUTPUT:
+  RETVAL
+
+void
+GetMocData( this )
+  AstMoc * this
+ PREINIT:
+  int nb;
+  size_t ln;
+  size_t mxsize;
+  void * cdata;
+  AV * data;
+ PPCODE:
+  nb = astGetI( this, "moctype" );
+  ln = astGetI( this, "moclength" );
+  mxsize = nb * ln;
+  cdata = get_mortalspace( mxsize, 'u' );
+  ASTCALL(
+    astGetMocData( this, mxsize, cdata );
+  )
+  if (nb == 4) {
+    data = newAV();
+    unpack1D(newRV_noinc((SV*) data), cdata, 'i', ln);
+    XPUSHs(newRV_noinc((SV*) data));
+  }
+  else if (nb == 8) {
+    data = newAV();
+    unpack1D(newRV_noinc((SV*) data), cdata, 'q', ln);
+    XPUSHs(newRV_noinc((SV*) data));
+  }
+  else {
+    Perl_croak(aTHX_ "Unexpected byte-length MOC data\n");
+  }
+
+void
+AddMocData( this, cmode, negate, maxorder, data )
+  AstMoc * this
+  int cmode
+  int negate
+  int maxorder
+  AV * data
+ PREINIT:
+  int len;
+  int64_t * cdata;
+ CODE:
+  len = av_len( data ) + 1;
+  cdata = pack1D( newRV_noinc((SV*)data), 'q' );
+  ASTCALL(
+    astAddMocData( this, cmode, negate, maxorder, len, 8, cdata );
+  )
+
+void
+AddPixelMaskD( this, cmode, wcs, value, oper, flags, badval, array, dims )
+  AstMoc * this
+  int cmode
+  AstFrameSet * wcs
+  double value
+  int oper
+  int flags
+  double badval
+  AV * array
+  AV * dims
+ PREINIT:
+  double * carray;
+  int * cdims;
+ CODE:
+  carray = pack1D( newRV_noinc((SV*)array), 'd' );
+  cdims = pack1D( newRV_noinc((SV*)dims), 'i' );
+  ASTCALL(
+    astAddPixelMaskD( this, cmode, wcs, value, oper, flags, badval, carray, cdims );
+  )
+
+int
+AddMocString( this, cmode, negate, maxorder, string )
+  AstMoc * this
+  int cmode
+  int negate
+  int maxorder
+  char * string
+ CODE:
+  ASTCALL(
+    astAddMocString( this, cmode, negate, maxorder, strlen(string), string, &RETVAL );
+  )
+ OUTPUT:
+  RETVAL
+
+void
+GetMocString( this, json )
+  AstMoc * this
+  int json
+ PREINIT:
+   size_t size;
+   char * RETVAL;
+ PPCODE:
+  ASTCALL(
+    astGetMocString( this, json, 0, 0, &size );
+  )
+  RETVAL = get_mortalspace( size, 'u' );
+  ASTCALL(
+    astGetMocString( this, json, size, RETVAL, &size );
+  )
+  XPUSHs(sv_2mortal(newSVpvn(RETVAL,size)));
 
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::FitsChan PREFIX = ast
@@ -3425,6 +3652,94 @@ astSetFitsCN( this, name, value, comment, overwrite )
   ASTCALL(
     astSetFitsCN( this, name, value, comment, overwrite );
   )
+
+double
+astGetFitsF( this, name )
+  AstFitsChan * this
+  char * name
+ PREINIT:
+  int status;
+ PPCODE:
+  ASTCALL(
+    status = astGetFitsF( this, name, &RETVAL );
+  )
+  if (status) {
+    XPUSHs(sv_2mortal(newSVnv(RETVAL)));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
+int
+astGetFitsI( this, name )
+  AstFitsChan * this
+  char * name
+ PREINIT:
+  int status;
+ PPCODE:
+  ASTCALL(
+    status = astGetFitsI( this, name, &RETVAL );
+  )
+  if (status) {
+    XPUSHs(sv_2mortal(newSViv(RETVAL)));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
+int
+astGetFitsL( this, name )
+  AstFitsChan * this
+  char * name
+ PREINIT:
+  int status;
+ PPCODE:
+  ASTCALL(
+    status = astGetFitsL( this, name, &RETVAL );
+  )
+  if (status) {
+    XPUSHs(sv_2mortal(newSViv(RETVAL)));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
+void
+astGetFitsS( this, name )
+  AstFitsChan * this
+  char * name
+ PREINIT:
+  char * RETVAL;
+  int status;
+ PPCODE:
+  ASTCALL(
+    status = astGetFitsS( this, name, &RETVAL );
+  )
+  if (status) {
+    XPUSHs(sv_2mortal(newSVpvn(RETVAL,strlen(RETVAL))));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
+void
+astGetFitsCN( this, name )
+  AstFitsChan * this
+  char * name
+ PREINIT:
+  char * RETVAL;
+  int status;
+ PPCODE:
+  ASTCALL(
+    status = astGetFitsCN( this, name, &RETVAL );
+  )
+  if (status) {
+    XPUSHs(sv_2mortal(newSVpvn(RETVAL,strlen(RETVAL))));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::SpecFrame PREFIX = ast
 
@@ -3813,3 +4128,7 @@ INCLUDE: AST_WCSMAP.xsh
 # Then the Grf constants
 
 INCLUDE: AST_GRF.xsh
+
+# And polygon operations
+
+INCLUDE: AST_POLY_OPER.xsh

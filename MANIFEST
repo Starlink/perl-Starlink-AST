@@ -494,6 +494,7 @@ lib/Starlink/AST/PLplot.pm
 lib/Starlink/AST/Tk.pm
 lib/Starlink/AST_ERR.xsh
 lib/Starlink/AST_GRF.xsh
+lib/Starlink/AST_POLY_OPER.xsh
 lib/Starlink/AST_WCSMAP.xsh
 MANIFEST
 META.json
@@ -516,6 +517,7 @@ t/fitschn0.t
 t/formats.t
 t/keymap-tie.t
 t/keymap.t
+t/moc.t
 t/offset.t
 t/plot00_pgplot.t
 t/plot00_plplot.t
