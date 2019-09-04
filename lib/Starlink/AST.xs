@@ -830,6 +830,23 @@ new( class, nin, nout, matrix, options )
  OUTPUT:
   RETVAL
 
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::NormMap
+
+AstNormMap *
+new( class, frame, options )
+  char * class
+  AstFrame * frame
+  char * options
+ CODE:
+  ASTCALL(
+   RETVAL = astNormMap( frame, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Plot
 
 AstPlot *
@@ -852,6 +869,33 @@ _new( class, frame, graphbox, basebox, options )
   cgraphbox = pack1D( newRV_noinc((SV*)graphbox), 'f');
   ASTCALL(
     RETVAL = astPlot( frame, cgraphbox, cbasebox, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::Plot3D
+
+AstPlot3D *
+_new( class, frame, graphbox, basebox, options )
+  char * class
+  AstFrame * frame
+  AV* graphbox
+  AV* basebox
+  char * options
+ PREINIT:
+  int len;
+  float * cgraphbox;
+  double * cbasebox;
+ CODE:
+  len = av_len( graphbox ) + 1;
+  if ( len != 6 ) Perl_croak(aTHX_ "GraphBox must contain 6 values" );
+  len = av_len( basebox ) + 1;
+  if ( len != 6 ) Perl_croak(aTHX_ "BaseBox must contain 6 values" );
+  cbasebox = pack1D( newRV_noinc((SV*)basebox), 'd');
+  cgraphbox = pack1D( newRV_noinc((SV*)graphbox), 'f');
+  ASTCALL(
+    RETVAL = astPlot3D( frame, cgraphbox, cbasebox, options );
   )
   if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
  OUTPUT:
@@ -929,9 +973,149 @@ new( class, inperm, outperm, constant, options )
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::PolyMap
 
 AstPolyMap *
-new( class )
+new( class, nin, nout, coeff_f, coeff_i, options )
+  char * class
+  int nin
+  int nout
+  AV * coeff_f
+  AV * coeff_i
+  char * options
+ PREINIT:
+  int len;
+  int mult;
+  int ncoeff_f;
+  double * ccoeff_f;
+  int ncoeff_i;
+  double * ccoeff_i;
  CODE:
-  Perl_croak(aTHX_ "PolyMap not yet implemented");
+  mult = 2 + nin;
+  len = av_len( coeff_f ) + 1;
+  if ( len % mult ) Perl_croak( aTHX_ "coeff_f must contain a multiple of %d elements", mult );
+  ncoeff_f = len / mult;
+  if (ncoeff_f) {
+    ccoeff_f = pack1D(newRV_noinc((SV*)coeff_f), 'd');
+  }
+  else {
+    ccoeff_f = 0;
+  }
+
+  mult = 2 + nout;
+  len = av_len( coeff_i ) + 1;
+  if ( len % mult ) Perl_croak( aTHX_ "coeff_i must contain a multiple of %d elements", mult );
+  ncoeff_i = len / mult;
+  if (ncoeff_i) {
+    ccoeff_i = pack1D(newRV_noinc((SV*)coeff_i), 'd');
+  }
+  else {
+    ccoeff_i = 0;
+  }
+
+  ASTCALL(
+    RETVAL = astPolyMap( nin, nout, ncoeff_f, ccoeff_f, ncoeff_i, ccoeff_i, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::ChebyMap
+
+AstChebyMap *
+new( class, nin, nout, coeff_f, coeff_i, lbnd_f, ubnd_f, lbnd_i, ubnd_i, options )
+  char * class
+  int nin
+  int nout
+  AV * coeff_f
+  AV * coeff_i
+  AV * lbnd_f
+  AV * ubnd_f
+  AV * lbnd_i
+  AV * ubnd_i
+  char * options
+ PREINIT:
+  int len;
+  int mult;
+  int ncoeff_f;
+  double * ccoeff_f;
+  int ncoeff_i;
+  double * ccoeff_i;
+  double * clbnd_f;
+  double * cubnd_f;
+  double * clbnd_i;
+  double * cubnd_i;
+ CODE:
+  mult = 2 + nin;
+  len = av_len( coeff_f ) + 1;
+  if ( len % mult ) Perl_croak( aTHX_ "coeff_f must contain a multiple of %d elements", mult );
+  ncoeff_f = len / mult;
+  if (ncoeff_f) {
+    ccoeff_f = pack1D(newRV_noinc((SV*)coeff_f), 'd');
+
+    len = av_len( lbnd_f ) + 1;
+    if ( len != nin ) Perl_croak( aTHX_ "lbnd_f must contain %d elements", nin );
+    clbnd_f = pack1D(newRV_noinc((SV*)lbnd_f), 'd');
+
+    len = av_len( ubnd_f ) + 1;
+    if ( len != nin ) Perl_croak( aTHX_ "ubnd_f must contain %d elements", nin );
+    cubnd_f = pack1D(newRV_noinc((SV*)ubnd_f), 'd');
+  }
+  else {
+    ccoeff_f = 0;
+    clbnd_f = 0;
+    cubnd_f = 0;
+  }
+
+  mult = 2 + nout;
+  len = av_len( coeff_i ) + 1;
+  if ( len % mult ) Perl_croak( aTHX_ "coeff_i must contain a multiple of %d elements", mult );
+  ncoeff_i = len / mult;
+  if (ncoeff_i) {
+    ccoeff_i = pack1D(newRV_noinc((SV*)coeff_i), 'd');
+
+    len = av_len( lbnd_i ) + 1;
+    if ( len != nin ) Perl_croak( aTHX_ "lbnd_i must contain %d elements", nin );
+    clbnd_i = pack1D(newRV_noinc((SV*)lbnd_i), 'd');
+
+    len = av_len( ubnd_i ) + 1;
+    if ( len != nin ) Perl_croak( aTHX_ "ubnd_i must contain %d elements", nin );
+    cubnd_i = pack1D(newRV_noinc((SV*)ubnd_i), 'd');
+  }
+  else {
+    ccoeff_i = 0;
+    clbnd_i = 0;
+    cubnd_i = 0;
+  }
+
+  ASTCALL(
+    RETVAL = astChebyMap( nin, nout, ncoeff_f, ccoeff_f, ncoeff_i, ccoeff_i,
+                          clbnd_f, cubnd_f, clbnd_i, cubnd_i, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+   RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::SelectorMap
+
+AstSelectorMap *
+new( class, regs, badval, options )
+  char * class
+  AV * regs
+  double badval
+  char * options
+ PREINIT:
+  int nreg;
+  AstObject ** cregs;
+ CODE:
+  nreg = av_len( regs ) + 1;
+  cregs = pack1DAstObj( regs );
+  ASTCALL(
+    RETVAL = astSelectorMap( nreg, (void**) cregs, badval, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::ShiftMap
 
@@ -952,6 +1136,51 @@ new( class, shift, options )
   if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
  OUTPUT:
   RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::SwitchMap
+
+AstSwitchMap *
+new( class, fsmap, ismap, routemaps, options )
+  char * class
+  AstMapping * fsmap
+  AstMapping * ismap
+  AV * routemaps
+  char * options
+ PREINIT:
+  int nroute;
+  AstObject ** croutemaps;
+ CODE:
+  nroute = av_len( routemaps ) + 1;
+  croutemaps = pack1DAstObj( routemaps );
+  ASTCALL(
+    RETVAL = astSwitchMap( fsmap, ismap, nroute, (void**) croutemaps, options );
+  )
+ if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::UnitNormMap
+
+AstUnitNormMap *
+new( class, centre, options )
+  char * class
+  AV * centre
+  char * options
+ PREINIT:
+  int ncoord;
+  double * ccentre;
+ CODE:
+  ncoord = av_len( centre ) + 1;
+  ccentre = pack1D(newRV_noinc((SV*)centre), 'd');
+  ASTCALL(
+    RETVAL = astUnitNormMap( ncoord, ccentre, options );
+  )
+ if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::SkyFrame
 
@@ -2007,6 +2236,22 @@ astMapDefined( this, key )
   )
  OUTPUT:
   RETVAL
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::Table
+
+AstTable *
+new( class, options )
+  char * class
+  char * options
+ CODE:
+  ASTCALL(
+   RETVAL = astTable( options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Frame PREFIX = ast
 
@@ -3505,6 +3750,34 @@ GetMocString( this, json )
     astGetMocString( this, json, size, RETVAL, &size );
   )
   XPUSHs(sv_2mortal(newSVpvn(RETVAL,size)));
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::PointList
+
+AstPointList *
+new( class, frame, points, unc, options )
+  char * class
+  AstFrame * frame
+  AV * points
+  AstRegion * unc
+  char * options
+ PREINIT:
+  double * cpoints;
+  int npnt;
+  int ncoord;
+  int len;
+ CODE:
+  ncoord = astGetI( frame, "Naxes" );
+  len = av_len( points ) + 1;
+  if ( len % ncoord ) Perl_croak( aTHX_ "points must contain a multiple of %d elements", ncoord );
+  npnt = len / ncoord;
+  cpoints = pack1D(newRV_noinc((SV*)points), 'd');
+  ASTCALL(
+     RETVAL = astPointList( frame, npnt, ncoord, npnt, cpoints, unc, options);
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
 
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::FitsChan PREFIX = ast
