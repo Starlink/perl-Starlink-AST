@@ -1606,7 +1606,7 @@ astTest( this, attrib )
   RETVAL
 
 bool
-ast_Equal( this, that )
+astEqual( this, that )
   AstObject * this
   AstObject * that
  CODE:

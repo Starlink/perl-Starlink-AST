@@ -85,7 +85,7 @@ do {
     datacheck( $moc, 'Second datacheck' );
 
     my $moc2 = Starlink::AST::_Copy($moc);
-    ok(Starlink::AST::_Equal($moc, $moc2), 'Copied MOC is equal to original');
+    ok(Starlink::AST::Equal($moc, $moc2), 'Copied MOC is equal to original');
 
     is($moc->Overlap($reg1), 5, 'MOC overlap');
 
@@ -131,7 +131,7 @@ do {
     $moc2->AddMocData( Starlink::AST::Region::AST__AND(), 0, -1, $data );
 
     is($moc->Overlap($moc2), 5, 'Overlap after adding MOC data');
-    ok(Starlink::AST::_Equal($moc, $moc2), "Equal after adding MOC data");
+    ok(Starlink::AST::Equal($moc, $moc2), "Equal after adding MOC data");
 
     my ($dims, $ipdata, $iwcs) = makeimage();
 
@@ -162,7 +162,7 @@ do {
     $moc2 = new Starlink::AST::Moc( ' ' );
     $moc2->AddRegion( Starlink::AST::Region::AST__OR(), $moc );
 
-    ok(Starlink::AST::_Equal($moc, $moc2), 'OR MOC equal to itself');
+    ok(Starlink::AST::Equal($moc, $moc2), 'OR MOC equal to itself');
     is($moc->Overlap($moc2), 5, 'OR MOC overlap 5 with itself');
 
     @centre = (0.0, 1.57);
@@ -192,7 +192,7 @@ do {
         $moc3->AddCell( Starlink::AST::Region::AST__OR(), $order, $npix );
     }
 
-    ok(Starlink::AST::_Equal($moc, $moc3), 'MOC equal after adding cells');
+    ok(Starlink::AST::Equal($moc, $moc3), 'MOC equal after adding cells');
 
     is($moc->Overlap($moc3), 5, 'MOC overlap 5 after adding cells');
 
@@ -207,7 +207,7 @@ do {
     $moc2 = new Starlink::AST::Moc( ' ' );
     $json = $moc2->AddMocString( Starlink::AST::Region::AST__OR(), 0, -1, $mocstr2 );
     ok(! $json, 'mocstr2 not read as JSON');
-    ok(Starlink::AST::_Equal($moc, $moc2), 'MOCs from strings equal');
+    ok(Starlink::AST::Equal($moc, $moc2), 'MOCs from strings equal');
     is($moc->GetI( 'MaxOrder' ), 8, 'MOC from string maxorder');
 
     $moc = new Starlink::AST::Moc( ' ' );
@@ -280,5 +280,5 @@ sub datacheck {
 
     is($moc->Overlap($moc2), 5, "$text overlap");
 
-    ok(Starlink::AST::_Equal($moc, $moc2), "$text equal");
+    ok(Starlink::AST::Equal($moc, $moc2), "$text equal");
 }
