@@ -1496,7 +1496,7 @@ astGetD( this, attrib )
   AstObject * this
   char * attrib
  ALIAS:
-  astGetF = 1
+  GetF = 1
  PREINIT:
   SV * arg = ST(0);
  CODE:
@@ -1517,7 +1517,7 @@ astGetI( this, attrib )
   AstObject * this
   char * attrib
  ALIAS:
-  astGetL = 1
+  GetL = 1
  PREINIT:
   SV * arg = ST(0);
  CODE:
@@ -1567,7 +1567,7 @@ astSetD( this, attrib, value )
   char * attrib
   double value
  ALIAS:
-  astSetF = 1
+  SetF = 1
  CODE:
   ASTCALL(
    astSetD( this, attrib, value );
@@ -1580,7 +1580,7 @@ astSetI( this, attrib, value )
   char * attrib
   int value
  ALIAS:
-  astSetL = 1
+  SetL = 1
  CODE:
   ASTCALL(
    astSetI( this, attrib, value );
