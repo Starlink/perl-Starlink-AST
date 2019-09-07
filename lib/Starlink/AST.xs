@@ -1017,6 +1017,74 @@ new( class, nin, nout, coeff_f, coeff_i, options )
  OUTPUT:
   RETVAL
 
+void
+PolyCoeffs( this, forward )
+  AstPolyMap * this
+  int forward
+ PREINIT:
+  int nel;
+  double * ccoeffs;
+  int ncoeff;
+  AV * coeffs;
+ PPCODE:
+  ASTCALL(
+    astPolyCoeffs( this, forward, 0, 0, &ncoeff );
+  )
+  nel = ncoeff * (astGetI(this, forward ? "Nin" : "Nout") + 2);
+  ccoeffs = get_mortalspace( nel, 'd' );
+  ASTCALL(
+    astPolyCoeffs( this, forward, nel, ccoeffs, &ncoeff );
+  )
+  coeffs = newAV();
+  unpack1D(newRV_noinc((SV*) coeffs), ccoeffs, 'd', nel );
+  XPUSHs(newRV_noinc((SV*) coeffs));
+  XPUSHs(sv_2mortal(newSViv(ncoeff)));
+
+AstPolyMap *
+_PolyTran( this, forward, acc, maxacc, maxorder, lbnd, ubnd )
+  AstPolyMap * this
+  int forward
+  double acc
+  double maxacc
+  int maxorder
+  SV * lbnd
+  SV * ubnd
+ PREINIT:
+  int len;
+  AV * albnd;
+  AV * aubnd;
+  double * clbnd = 0;
+  double * cubnd = 0;
+ CODE:
+  len = astGetI(this, forward ? "Nin" : "Nout");
+  /* Allow lbnd and ubnd to be undef for the ChebyMap case. */
+  if (SvROK(lbnd)) {
+    if (SvTYPE(SvRV(lbnd)) != SVt_PVAV) {
+      Perl_croak( aTHX_ "lbnd must be an array reference (or undef for ChebyMap)" );
+    }
+    albnd = (AV*)SvRV( lbnd );
+    if (av_len(albnd) + 1 != len) {
+      Perl_croak( aTHX_ "lbnd must contain %d elements", len );
+    }
+    clbnd = pack1D(newRV_noinc((SV*)albnd), 'd');
+  }
+  if (SvROK(ubnd)) {
+    if (SvTYPE(SvRV(ubnd)) != SVt_PVAV) {
+      Perl_croak( aTHX_ "ubnd must be an array reference (or undef for ChebyMap)" );
+    }
+    aubnd = (AV*)SvRV( ubnd );
+    if (av_len(aubnd) + 1 != len) {
+      Perl_croak( aTHX_ "ubnd must contain %d elements", len );
+    }
+    cubnd = pack1D(newRV_noinc((SV*)aubnd), 'd');
+  }
+  ASTCALL(
+    RETVAL = astPolyTran( this, forward, acc, maxacc, maxorder, clbnd, cubnd );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::ChebyMap
 
@@ -1094,6 +1162,29 @@ new( class, nin, nout, coeff_f, coeff_i, lbnd_f, ubnd_f, lbnd_i, ubnd_i, options
  OUTPUT:
    RETVAL
 
+void
+ChebyDomain( this, forward )
+  AstChebyMap * this
+  int forward
+ PREINIT:
+  int len;
+  double * clbnd;
+  double * cubnd;
+  AV * lbnd;
+  AV * ubnd;
+ PPCODE:
+  len = astGetI(this, forward ? "Nin" : "Nout");
+  clbnd = get_mortalspace( len, 'd' );
+  cubnd = get_mortalspace( len, 'd' );
+  ASTCALL(
+    astChebyDomain( this, forward, clbnd, cubnd );
+  )
+  lbnd = newAV();
+  unpack1D(newRV_noinc((SV*) lbnd), clbnd, 'd', len );
+  XPUSHs(newRV_noinc((SV*) lbnd));
+  ubnd = newAV();
+  unpack1D(newRV_noinc((SV*) ubnd), cubnd, 'd', len );
+  XPUSHs(newRV_noinc((SV*) ubnd));
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::SelectorMap
 
