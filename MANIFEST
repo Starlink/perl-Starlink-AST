@@ -509,6 +509,7 @@ src/grf_perl.c
 src/ppport.h
 t/attrib.t
 t/channel.t
+t/chebymap.t
 t/dclone.t
 t/dsb_reg.t
 t/error.t
@@ -527,6 +528,7 @@ t/plot_pg.t
 t/plot_pl.t
 t/plot_tk.t
 t/plot_tk_zinc.t
+t/polymap.t
 t/region.t
 t/specframe.t
 t/stcschan.t

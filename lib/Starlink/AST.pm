@@ -724,6 +724,12 @@ package Starlink::AST::PolyMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
+sub PolyTran {
+  my $self = shift;
+  my $new = $self->_PolyTran(@_);
+  return bless $new, ref($self);
+}
+
 package Starlink::AST::ChebyMap;
 use base qw/ Starlink::AST::PolyMap /;
 our $VERSION = '1.00';
