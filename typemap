@@ -7,9 +7,11 @@ AstCircle *	T_ASTOBJ
 AstCmpFrame *	T_ASTOBJ
 AstCmpMap *	T_ASTOBJ
 AstCmpRegion *	T_ASTOBJ
+AstDssMap *	T_ASTOBJ
 AstDSBSpecFrame *	T_ASTOBJ
 AstEllipse *	T_ASTOBJ
 AstFitsChan *	T_ASTOBJ
+AstFitsTable *	T_ASTOBJ
 AstFluxFrame *	T_ASTOBJ
 AstFrame *	T_ASTOBJ
 AstFrameSet *	T_ASTOBJ

@@ -368,6 +368,10 @@ package Starlink::AST::StcsChan;
 use base  qw/ Starlink::AST::Channel /;
 our $VERSION = '1.00';
 
+package Starlink::AST::MocChan;
+use base  qw/ Starlink::AST::Channel /;
+our $VERSION = '1.00';
+
 # Make this available for completeness and provide
 # a tie interface. Useful when transferring content via
 # a text file.
@@ -676,6 +680,10 @@ package Starlink::AST::Table;
 use base qw/ Starlink::AST::KeyMap /;
 our $VERSION = '1.00';
 
+package Starlink::AST::FitsTable;
+use base qw/ Starlink::AST::Table /;
+our $VERSION = '1.00';
+
 package Starlink::AST::Mapping;
 use base qw/ Starlink::AST /;
 our $VERSION = '1.00';
@@ -787,6 +795,10 @@ use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 
 package Starlink::AST::UnitNormMap;
+use base qw/ Starlink::AST::Mapping /;
+our $VERSION = '1.00';
+
+package Starlink::AST::XphMap;
 use base qw/ Starlink::AST::Mapping /;
 our $VERSION = '1.00';
 

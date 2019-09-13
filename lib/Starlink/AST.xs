@@ -636,6 +636,7 @@ _new( class, sourcefunc, sinkfunc, options )
   AstFitsChan * fitschan;
   AstXmlChan * xmlchan;
   AstStcsChan * stcschan;
+  AstMocChan * mocchan;
   bool has_source = 0;
   bool has_sink = 0;
  CODE:
@@ -706,6 +707,12 @@ _new( class, sourcefunc, sinkfunc, options )
                                (void (*)( const char * )) sink, sinkWrap, options );
    )
    if (astOK) setPerlAstObject( RETVAL, (AstObject*)stcschan );
+  } else if (strstr( class, "MocChan") != NULL ) {
+   ASTCALL(
+    mocchan = astMocChanFor( (const char *(*)()) source, sourceWrap,
+                             (void (*)( const char * )) sink, sinkWrap, options );
+   )
+   if (astOK) setPerlAstObject( RETVAL, (AstObject*)mocchan );
   } else {
      Perl_croak(aTHX_ "Channel of class %s not recognized.", class );
   }
@@ -2344,6 +2351,22 @@ new( class, options )
   RETVAL
 
 
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::FitsTable
+
+AstFitsTable *
+new( class, header, options )
+  char * class
+  AstFitsChan * header
+  char * options
+ CODE:
+  ASTCALL(
+    RETVAL = astFitsTable( header, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
+
+
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::Frame PREFIX = ast
 
 
@@ -3841,6 +3864,23 @@ GetMocString( this, json )
     astGetMocString( this, json, size, RETVAL, &size );
   )
   XPUSHs(sv_2mortal(newSVpvn(RETVAL,size)));
+
+
+MODULE = Starlink::AST   PACKAGE = Starlink::AST::Prism
+
+AstPrism *
+new( class, region1, region2, options )
+  char * class
+  AstRegion * region1
+  AstRegion * region2
+  char * options
+ CODE:
+  ASTCALL(
+    RETVAL = astPrism( region1, region2, options );
+  )
+  if ( RETVAL == AST__NULL ) XSRETURN_UNDEF;
+ OUTPUT:
+  RETVAL
 
 
 MODULE = Starlink::AST   PACKAGE = Starlink::AST::PointList
