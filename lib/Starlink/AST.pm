@@ -251,6 +251,13 @@ sub Copy {
   return bless $new, ref($self);
 }
 
+sub FromString {
+  my $str = shift;
+  my $new = _FromString($str);
+  return unless defined $new;
+  return $new->_rebless();
+}
+
 # Converts a generic Starlink::AST object into the true
 # underlying class. Useful when we have extracted a pointer
 # from AST but do not yet know what type of object it is

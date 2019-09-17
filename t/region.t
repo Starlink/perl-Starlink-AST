@@ -1,7 +1,8 @@
 #!perl
 
 use strict;
-use Test::More tests => 17;
+use Test::More tests => 26;
+use Test::Number::Delta;
 
 require_ok( "Starlink::AST" );
 
@@ -18,6 +19,14 @@ my $sky = new Starlink::AST::SkyFrame("");
 my $obsArea = new Starlink::AST::Circle( $sky, 1, [0,0], [1*DAS2R], undef, "" );
 isa_ok($obsArea, "Starlink::AST::Region");
 
+# Test retrieval of the circle parameters.
+do {
+    my ($centre, $radius, $p1) = $obsArea->CirclePars();
+    delta_ok($centre, [0.0, 0.0]);
+    delta_ok($radius, 1.0 * DAS2R);
+    is(ref $p1, 'ARRAY');
+};
+
 # create some "survey fields"
 
 my $circle = new Starlink::AST::Circle( $sky, 1, [0,0], [60*DAS2R], undef, "");
@@ -29,6 +38,17 @@ isa_ok($int, "Starlink::AST::Interval");
 my $ellipse = new Starlink::AST::Ellipse( $sky, 1, [0,0],[120*DAS2R,180*DAS2R],
 					  [0], undef, "" );
 isa_ok($ellipse, "Starlink::AST::Ellipse");
+
+do {
+    my ($centre, $a, $b, $angle, $p1, $p2) = $ellipse->EllipsePars();
+    delta_ok($centre, [0.0, 0.0]);
+    delta_ok($a, 120.0 * DAS2R);
+    delta_ok($b, 180.0 * DAS2R);
+    delta_ok($angle, 0.0);
+    is(ref $p1, 'ARRAY');
+    is(ref $p2, 'ARRAY');
+};
+
 my $polygon = new Starlink::AST::Polygon( $sky,
 					  [-0.2, 0,0.2,0],
 					  [ 0, 0.2, 0, -0.2],
