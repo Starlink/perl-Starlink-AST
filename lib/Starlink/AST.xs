@@ -2471,6 +2471,34 @@ astMapGet1C( this, key )
   }
 
 void
+astMapGetC( this, key )
+  AstKeyMap * this
+  char * key
+ PREINIT:
+  const char * RETVAL = 0;
+ PPCODE:
+  ASTCALL(
+    astMapGetC( this, key, &RETVAL );
+  )
+  if (RETVAL) {
+    XPUSHs(sv_2mortal(newSVpvn(RETVAL,strlen(RETVAL))));
+  }
+  else {
+    XSRETURN_EMPTY;
+  }
+
+int
+astMapLenC( this, key )
+  AstKeyMap * this
+  char * key
+ CODE:
+  ASTCALL(
+    RETVAL = astMapLenC( this, key );
+  )
+ OUTPUT:
+  RETVAL
+
+void
 astMapRemove( this, key )
   AstKeyMap * this
   char * key
