@@ -1,7 +1,7 @@
 #!perl
 
 use strict;
-use Test::More tests => 26;
+use Test::More tests => 37;
 use Test::Number::Delta;
 
 require_ok( "Starlink::AST" );
@@ -19,12 +19,27 @@ my $sky = new Starlink::AST::SkyFrame("");
 my $obsArea = new Starlink::AST::Circle( $sky, 1, [0,0], [1*DAS2R], undef, "" );
 isa_ok($obsArea, "Starlink::AST::Region");
 
+my $obsAreaFS = $obsArea->GetRegionFrameSet();
+isa_ok($obsAreaFS, 'Starlink::AST::FrameSet');
+
 # Test retrieval of the circle parameters.
 do {
     my ($centre, $radius, $p1) = $obsArea->CirclePars();
     delta_ok($centre, [0.0, 0.0]);
     delta_ok($radius, 1.0 * DAS2R);
     is(ref $p1, 'ARRAY');
+};
+
+do {
+    my ($centre, $radius) = $obsArea->GetRegionDisc();
+    delta_ok($centre, [0.0, 0.0]);
+    delta_ok($radius, 1.0 * DAS2R);
+};
+
+do {
+    my $points = $obsArea->GetRegionPoints();
+    delta_ok($points->[0], 0.0);
+    delta_ok($points->[2], 0.0);
 };
 
 # create some "survey fields"
@@ -55,6 +70,9 @@ my $polygon = new Starlink::AST::Polygon( $sky,
 					  undef, "");
 isa_ok($polygon, "Starlink::AST::Polygon");
 
+my $downsized = $polygon->Downsize(0.0, 3);
+isa_ok($downsized, 'Starlink::AST::Polygon');
+
 # Test for overlap
 is( $circle->Overlap( $obsArea ), 3,"Circular area");
 is( $box->Overlap( $obsArea ), 3,"Box area");
@@ -74,3 +92,25 @@ is( $ellipse->Overlap( $obsArea2 ), 1,"Outside Ellipse");
 
 isa_ok( $circle->CmpRegion( $box, Starlink::AST::Region::AST__AND(), "" ),
 	"Starlink::AST::CmpRegion" );
+
+# Create a prism.
+my $spec = new Starlink::AST::SpecFrame('Unit=Angstrom');
+my $int2 = new Starlink::AST::Interval($spec, [5000.0], [6000.0], undef, '');
+my $prism = new Starlink::AST::Prism($box, $int2, '');
+isa_ok($prism, 'Starlink::AST::Prism');
+
+# Create a point list.
+my $pointlist = new Starlink::AST::PointList($sky, [0.0, 0.0], undef, '');
+isa_ok($pointlist, 'Starlink::AST::PointList');
+
+# Try SkyOffsetMap.
+my $som = $sky->SkyOffsetMap();
+isa_ok($som, 'Starlink::AST::Mapping');
+
+# Try manipulating uncertainty information.
+my $unc = $obsArea->GetUnc(0);
+ok(! defined $unc);
+
+$obsArea->SetUnc(new Starlink::AST::Circle($sky, 1, [0, 0], [0.01 * DAS2R], undef, ''));
+my $unc = $obsArea->GetUnc(0);
+isa_ok($unc, 'Starlink::AST::Region');
