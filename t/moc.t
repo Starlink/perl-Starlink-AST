@@ -8,7 +8,7 @@ my ($szmesh1, $szmesh2);
 
 BEGIN {
     $szmesh1 = 868;
-    $szmesh2 = 298;
+    $szmesh2 = 294;
 }
 
 use Test::More tests => 42 + $szmesh1 + $szmesh2 + 2 * 2 + 896;

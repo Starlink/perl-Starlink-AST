@@ -33,7 +33,7 @@ my $class = Module::Build->subclass(code => <<'EOF');
         my %exclude = map {$_ => 1} (qw/
             ast_test.c config.h err_drama.c err_ems.c err_null.c
             grf_2.0.c grf_3.2.c grf3d_pgplot.c grf_5.6.c grf_null.c grf_pgplot.c
-            stcschan-demo1.c stcschan-demo2.c stcschan-demo3.c
+            huge.c stcschan-demo1.c stcschan-demo2.c stcschan-demo3.c
             stcschan-demo4.c stcschan-demo5.c templateclass.c templateclass.h
         /);
         my %include = map {$_ => 1} (qw/
