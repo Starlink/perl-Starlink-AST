@@ -204,7 +204,7 @@ ast/xphmap.h
 ast/zoommap.c
 ast/zoommap.h
 Build.PL
-ChangeLog
+Changes
 data/m31.fit
 data/m31.jpg
 exported_symbols.lis
