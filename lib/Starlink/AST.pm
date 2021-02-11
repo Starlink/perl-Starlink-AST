@@ -371,6 +371,10 @@ package Starlink::AST::XmlChan;
 use base qw/ Starlink::AST::Channel /;
 our $VERSION = '3.00';
 
+package Starlink::AST::YamlChan;
+use base qw/ Starlink::AST::Channel /;
+our $VERSION = '3.00';
+
 package Starlink::AST::StcsChan;
 use base  qw/ Starlink::AST::Channel /;
 our $VERSION = '3.00';
