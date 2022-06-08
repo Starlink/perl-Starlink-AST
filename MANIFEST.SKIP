@@ -13,3 +13,4 @@
 ~$
 .*\.o
 ^lib/Starlink/AST.c
+^Starlink-AST-.*\.tar\.gz$
